@@ -11,6 +11,55 @@ fillto	macro	endaddr,value
 	endm
 
 
+	org	6000h
+X6000:	ds	1
+X6001:	ds	1
+X6002:	ds	1
+X6003:	ds	1
+X6004:	ds	1
+X6005:	ds	1
+X6006:	ds	1
+X6007:	ds	1
+X6008:	ds	1
+X6009:	ds	1
+X600a:	ds	1
+X600b:	ds	1
+X600c:	ds	1
+X600d:	ds	1
+X600e:	ds	1
+X600f:	ds	1
+X6010:	ds	1
+X6011:	ds	1
+X6012:	ds	1
+X6013:	ds	1
+X6014:	ds	1
+X6015:	ds	2
+X6017:	ds	2
+X6019:	ds	5
+X601e:	ds	40
+X6046:	ds	1
+X6047:	ds	1
+X6048:	ds	1
+X6049:	ds	1
+X604a:	ds	3
+X604d:	ds	1
+X604e:	ds	1
+X604f:	ds	1
+X6050:	ds	27
+X606b:	ds	9
+X6074:	ds	64
+X60b4:	ds	7
+X60bb:	ds	1
+
+	org	63fch
+X63fc:	ds	1
+X63fd:	ds	1
+X63fe:	ds	1
+X63ff:	ds	1
+
+
+	org	0
+
 rst00:	jp	doreset
 
 X0003:	jp	X012b
@@ -4407,48 +4456,7 @@ X0064	equ	64h
 X17cc	equ	17cch
 X17ce	equ	17ceh
 X1a1d	equ	1a1dh
-X6000	equ	6000h
-X6001	equ	6001h
-X6002	equ	6002h
-X6003	equ	6003h
-X6004	equ	6004h
-X6005	equ	6005h
-X6006	equ	6006h
-X6007	equ	6007h
-X6008	equ	6008h
-X6009	equ	6009h
-X600a	equ	600ah
-X600b	equ	600bh
-X600c	equ	600ch
-X600d	equ	600dh
-X600e	equ	600eh
-X600f	equ	600fh
-X6010	equ	6010h
-X6011	equ	6011h
-X6012	equ	6012h
-X6013	equ	6013h
-X6014	equ	6014h
-X6015	equ	6015h
-X6017	equ	6017h
-X6019	equ	6019h
-X601e	equ	601eh
-X6046	equ	6046h
-X6047	equ	6047h
-X6048	equ	6048h
-X6049	equ	6049h
-X604a	equ	604ah
-X604d	equ	604dh
-X604e	equ	604eh
-X604f	equ	604fh
-X6050	equ	6050h
-X606b	equ	606bh
-X6074	equ	6074h
-X60b4	equ	60b4h
-X60bb	equ	60bbh
-X63fc	equ	63fch
-X63fd	equ	63fdh
-X63fe	equ	63feh
-X63ff	equ	63ffh
+
 X6405	equ	6405h
 Xf053	equ	0f053h
 Xf057	equ	0f057h
