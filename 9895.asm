@@ -1,21 +1,9 @@
 ; HP 9895A floppy disk firmware
 ; Partially reverse-engineered by Eric Smith <spacewar@gmail.com>
-; with assistance from Craig Ruff
+; and Craig Ruff
 
 ; Cross-assembles with Macro Assembler AS:
 ;   http://john.ccac.rwth-aachen.de:8000/as/
-
-; Marketing blurb about PHI chip:
-;   Hewlett-Packard Computer Advances, Volume 2 Number 4, November 1977
-;   included in Computerworld, Volume XI Number 46, November 14, 1977
-;
-; General description of the PHI chip:
-;   "PHI, the HP-IB Interface Chip", John W. Figueroa,
-;   Hewlett Packard Journal, Volume 29 Number 11, July 1978, pp. 16-16
-;
-; Detailed information about PHI chip:
-;   "HP 12009A HP-IB Interface Reference Manual",
-;   manual part number 12009-90001, September 1982
 
 	org	0
 
@@ -30,43 +18,25 @@ fillto	macro	endaddr,value
 	endm
 
 
-; I/O ports
+; PHI chip (Processor to Hpib Interface) I/O ports
 
+; Marketing blurb about PHI chip:
+;   Hewlett-Packard Computer Advances, Volume 2 Number 4, November 1977
+;   included in Computerworld, Volume XI Number 46, November 14, 1977
+;
+; General description of the PHI chip:
+;   "PHI, the HP-IB Interface Chip", John W. Figueroa,
+;   Hewlett Packard Journal, Volume 29 Number 11, July 1978, pp. 16-16
+;
+; Detailed information about PHI chip:
+;   "HP 12009A HP-IB Interface Reference Manual",
+;   manual part number 12009-90001, September 1982
 
-; PHI chip (Processor to Hpib Interface)
+; Note that HP 12009A inverts address A1 (A14 in HP numbering), so
+; register numbering doesn't match that documentation.
 
-; XXX While the ports are 10h..17h, I think these specific assignments
-; are wrong. Maybe address bits are permuted and/or inverted?  See e.g.
-; the sequences that write 00h and 81h to two registers, which could be
-; the identify response if written to phi_id1 and phi_id2.
-
-phi0	equ	10h
-phi1	equ	11h
-phi2	equ	12h
-phi3	equ	13h
-phi4	equ	14h
-phi5	equ	15h
-phi6	equ	16h
-phi7	equ	17h
-
-
-;phi_fifo	equ	10h	; bit 15..14: 00 - RX/TX normal data
-				;             01 - RX secondary address
-				;	      01 - TX interface command
-				; 	      10 - TX byte count
-				;             11 - RX end
-				;	      11 - TX uncounted transfer enable
-				; bits 7..0: data
-
-;phi_status	equ	11h	; bits 7..6: high order bit access
-				; bit 5: REM
-				; bit 4: Controller
-				; bit 3: System Controller
-				; bit 2: Addressed to talk or identify
-				; bit 1: Addressed to listen
-				; bit 0: Outbound data freeze
-
-;phi_int_cond	equ	12h	; bit 7: status change
+phi_int_cond	equ	10h	; PHI register 2 (HP 12009A numbering)
+				; bit 7: status change
 				; bit 6: processor handshake abort
 				; bit 5: parallel poll response
 				; bit 4: service request
@@ -75,12 +45,31 @@ phi7	equ	17h
 				; bit 1: fifo idle
 				; bit 0: device clear
 
-;phi_int_mask	equ	13h
+phi_int_mask	equ	11h	; PHI register 3 (HP 12009A numbering)
 
-;phi_id1		equ	14h
-;phi_id2		equ	15h
+phi_fifo	equ	12h	; PHI register 0 (HP 12009A numbering)
+				; bit 15..14: 00 - RX/TX normal data
+				;             01 - RX secondary address
+				;	      01 - TX interface command
+				; 	      10 - TX byte count
+				;             11 - RX end
+				;	      11 - TX uncounted transfer enable
+				; bits 7..0: data
 
-;phi_ctrl	equ	16h	; bit 7: 8-bit processor
+phi_status	equ	13h	; PHI register 1 (HP 12009A numbering)
+				; bits 7..6: high order bit access
+				; bit 5: REM
+				; bit 4: Controller
+				; bit 3: System Controller
+				; bit 2: Addressed to talk or identify
+				; bit 1: Addressed to listen
+				; bit 0: Outbound data freeze
+
+phi_id1		equ	16h	; PHI register 4 (HP 12009A numbering)
+phi_id2		equ	17h	; PHI register 5 (HP 12009A numbering)
+
+phi_control	equ	14h	; PHI register 6 (HP 12009A numbering)
+				; bit 7: 8-bit processor
 				; bit 6: parity freeze
 				; bit 5: REN value
 				; bit 4: IFC value
@@ -89,10 +78,14 @@ phi7	equ	17h
 				; bit 1: DMA fifo select
 				; bit 0: initialize outbound FIFO (write only)
 
-;phi_addr	equ	17h	; bit 7: ONL (online)
+phi_address	equ	15h	; PHI register 7 (HP 12009A numbering)
+				; bit 7: ONL (online)
 				; bit 6: TA (talk always)
 				; bit 5: LA (listen always)
 				; bits 4..0: HP-IB address
+
+
+; Floppy controller I/O ports
 
 fdc0	equ	60h
 fdc1	equ	61h
@@ -201,7 +194,7 @@ x0033:	jp	x0bc8
 
 	ex	af,af'
 	di
-x003a:	in	a,(phi3)
+x003a:	in	a,(phi_status)
 	exx
 	ld	hl,x135c
 	ex	(sp),hl
@@ -238,13 +231,15 @@ x0074:	xor	a
 x0075:	ld	(x6000),a
 	ld	sp,x63ff
 	xor	a
-	out	(phi3),a
+	out	(phi_status),a
 	ld	(x600c),a
 	ld	a,0dh
-	out	(phi1),a
-	in	a,(phi4)
+	out	(phi_int_mask),a
+
+	in	a,(phi_control)		; clear parity freeze
 	res	6,a
-	out	(phi4),a
+	out	(phi_control),a
+
 x008b:	xor	a
 	ld	(x6001),a
 	ld	(x6002),a
@@ -253,14 +248,14 @@ x008b:	xor	a
 	call	x1266
 	xor	a
 	out	(fdc4),a
-	out	(phi3),a
-	out	(phi6),a
+	out	(phi_status),a
+	out	(phi_id1),a
 	ld	a,81h
-	out	(phi7),a
+	out	(phi_id2),a
 	ld	a,41h
-	out	(phi3),a
+	out	(phi_status),a
 	ld	a,0ffh
-	out	(phi0),a
+	out	(phi_int_cond),a
 	ld	(iy+0dh),3
 x00b2:	ld	a,(x600d)
 	cp	0ffh
@@ -306,18 +301,23 @@ x00f8:	ld	(ix+5),d
 x0105:	call	x154c
 	jr	x00b2
 
-x010a:	in	a,(phi4)
-	and	40h
-	or	89h
+x010a:	in	a,(phi_control)
+	and	40h		; save parity freeze status, clear others
+	or	89h		; set 8-bit processor,
+				;    respond to parallel poll,
+				;    init outbound FIFO
 	ld	b,a
+
 	ld	a,80h
-	out	(phi3),a
+	out	(phi_status),a
+
 	ld	a,b
-	out	(phi4),a
+	out	(phi_control),a
+
 	in	a,(fdc3)
 	and	7
 	or	80h
-	out	(phi5),a
+	out	(phi_address),a
 	im	1
 	ld	a,(x6000)
 	cp	2
@@ -349,9 +349,9 @@ x014a:	ld	a,(x6007)
 x0154:	call	x1272
 	ld	a,0f9h
 	out	(fdc3),a
-x015b:	in	a,(phi2)
+x015b:	in	a,(phi_fifo)
 	ld	c,a
-	in	a,(phi3)
+	in	a,(phi_status)
 	bit	6,a
 	jr	nz,x0169
 	call	x01ae
@@ -410,7 +410,7 @@ x01ae:	ld	bc,0
 	ld	d,1fh
 x01b3:	call	x1285
 	ret	nz
-	in	a,(phi3)
+	in	a,(phi_status)
 	and	6
 	jp	z,x1473
 	djnz	x01b3
@@ -455,7 +455,7 @@ x01f6:	ld	hl,x6046
 x01fe:	call	x01ae
 	ld	c,12h
 	ini
-x0205:	in	a,(phi3)
+x0205:	in	a,(phi_status)
 	inc	e
 x0208:	bit	6,a
 	jr	nz,x0210
@@ -655,42 +655,51 @@ x030a:	bit	3,(ix+6)
 	ret
 
 
+; wait for DEVICE CLEAR
 x0312:	ld	bc,0
 	ld	d,5eh
-x0317:	in	a,(phi0)
+
+x0317:	in	a,(phi_int_cond)	; is DEVICE CLEAR active?
 	bit	0,a
-	jr	nz,x032c
-	djnz	x0317
+	jr	nz,x032c		; yes
+
+	djnz	x0317			; no, retry a lot of times
 	dec	c
 	jr	nz,x0317
 	dec	d
 	jr	nz,x0317
-x0325:	ld	a,1
-	out	(phi0),a
+
+x0325:	ld	a,1			; clear DEVICE CLEAR status
+	out	(phi_int_cond),a
 	jp	x1473
 
 x032c:	bit	2,a
 	jr	z,x0325
-	in	a,(phi2)
+
+	in	a,(phi_fifo)
 	ld	b,a
-	in	a,(phi3)
+	in	a,(phi_status)	; check high order bits for end
 	and	0c0h
 	cp	0c0h
-	jr	nz,x0325
+	jr	nz,x0325	;   not end
+
+; yes, end
 	xor	a
 	ld	(x6000),a
 	bit	0,b
 	jr	z,x0345
-	ld	a,40h
+
+	ld	a,40h		; set parity freeze
 x0345:	ld	b,a
-	in	a,(phi4)
+	in	a,(phi_control)
 	or	b
-	out	(phi4),a
+	out	(phi_control),a
+
 	ld	a,b
 	ld	(x600c),a
-	out	(phi3),a
+	out	(phi_status),a
 	ld	a,0dh
-	out	(phi1),a
+	out	(phi_int_mask),a
 	bit	6,b
 	jp	nz,x008b
 	call	x1290
@@ -698,7 +707,7 @@ x0345:	ld	b,a
 
 x0360:	push	af
 	call	x1272
-	in	a,(phi0)
+	in	a,(phi_int_cond)
 	bit	2,a
 	jp	z,x0074
 	pop	af
@@ -755,18 +764,20 @@ x03c9:	call	x154c
 	fillto	03e0h,076h
 
 
-x03e0:	in	a,(phi0)
-	in	a,(phi3)
+x03e0:	in	a,(phi_int_cond)
+	in	a,(phi_status)
 	and	40h
 	jr	nz,x0427
-x03e8:	in	a,(phi4)
+
+x03e8:	in	a,(phi_control)		; initialize outbound FIFO
 	or	1
-	out	(phi4),a
+	out	(phi_control),a
+
 	ld	a,81h
-	out	(phi3),a
+	out	(phi_status),a
 	ld	a,(x6000)
-	out	(phi2),a
-	in	a,(phi0)
+	out	(phi_fifo),a
+	in	a,(phi_int_cond)
 	bit	2,a
 	jp	nz,x1467
 	ld	a,(x6000)
@@ -790,9 +801,9 @@ x0423:	ld	(x6000),a
 	ret
 
 x0427:	ld	b,40h
-	out	(phi3),a
+	out	(phi_status),a
 	xor	a
-	out	(phi0),a
+	out	(phi_int_cond),a
 	ld	(iy+0),3
 	jr	x03e8
 
@@ -1120,7 +1131,7 @@ x068f:	call	x001b
 x069b:	inc	(ix+0)
 x069e:	djnz	x068f
 	ld	b,14h
-	call	x1240
+	call	delay
 	pop	bc
 	xor	a
 	ret
@@ -1138,7 +1149,7 @@ x06b4:	out	(fdc5),a
 	out	(fdc5),a
 	rst	30h
 	ld	b,3
-	call	x1240
+	call	delay
 	pop	bc
 	ret
 
@@ -1166,7 +1177,7 @@ x06df:	in	a,(fdc2)
 x06ee:	ld	a,50h
 	cp	b
 	ld	b,14h
-	call	nz,x1240
+	call	nz,delay
 	xor	a
 	ret
 
@@ -1229,7 +1240,7 @@ x075d:	call	x0952
 x0763:	call	x1285
 	pop	hl
 	jp	nz,x07e4
-	in	a,(phi3)
+	in	a,(phi_status)
 	bit	2,a
 	jp	z,x07e4
 	call	x0c87
@@ -1344,7 +1355,7 @@ x0842:	ld	hl,xf073
 	jr	nc,x0842
 	jp	nz,x1464
 	ld	b,2
-	call	x1240
+	call	delay
 	ld	a,6
 	call	x0ad9
 	call	x08ca
@@ -2158,7 +2169,7 @@ x0e61:	push	bc
 	ld	c,0
 	call	x001b
 	ld	b,14h
-	call	x1240
+	call	delay
 	pop	bc
 	inc	(ix+0)
 	ret
@@ -2706,13 +2717,13 @@ x1225:	ld	hl,(x6007)
 	fillto	01240h,076h
 
 
-x1240:	push	bc
+delay:	push	bc
 	ld	b,0
 x1243:	djnz	x1243
 	ld	b,28h
 x1247:	djnz	x1247
 	pop	bc
-	djnz	x1240
+	djnz	delay
 	ret
 
 
@@ -2727,43 +2738,44 @@ x124d:	pop	hl
 	jp	(hl)
 
 
-x1266:	in	a,(phi1)
+x1266:	in	a,(phi_int_mask)
 	ld	b,a
 	ld	a,(x600c)
-	out	(phi3),a
+	out	(phi_status),a
 	ld	a,b
-	out	(phi1),a
+	out	(phi_int_mask),a
 	ret
 
 
-x1272:	in	a,(phi4)
+x1272:	in	a,(phi_control)		; disable parallel poll response
 	and	0f7h
 	jr	x1282
 
-x1278:	in	a,(phi4)
+x1278:	in	a,(phi_control)		; enable parallel poll response
 	or	8
 	jr	x1282
 
-x127e:	in	a,(phi4)
+x127e:	in	a,(phi_control)		; initialize outbound FIFO
 	or	1
-x1282:	out	(phi4),a
+x1282:	out	(phi_control),a
 	ret
 
-x1285:	in	a,(phi0)
+
+x1285:	in	a,(phi_int_cond)
 	bit	2,a
 	ret	nz
 	bit	0,a
 	call	nz,x000b
 	ret
 
-x1290:	in	a,(phi0)
-	in	a,(phi3)
+x1290:	in	a,(phi_int_cond)
+	in	a,(phi_status)
 	bit	6,a
 	ret	z
 	ld	b,40h
-	out	(phi3),a
+	out	(phi_status),a
 	xor	a
-	out	(phi0),a
+	out	(phi_int_cond),a
 	ld	(iy+0),3
 	ret
 
@@ -2783,9 +2795,10 @@ x12b1:	call	x1285
 	jp	x1473
 
 x12c1:	call	x1272
-	in	a,(phi2)
+
+	in	a,(phi_fifo)
 	ld	c,a
-	in	a,(phi3)
+	in	a,(phi_status)	; check high order bits rx secondary address
 	bit	6,a
 	jp	z,x1473
 	call	x1290
@@ -2797,13 +2810,13 @@ x12c1:	call	x1272
 
 x12da:	push	af
 	ld	a,1
-	out	(phi3),a
+	out	(phi_status),a
 	call	x1285
 	jp	nz,x1467
 	ld	a,b
-	out	(phi3),a
+	out	(phi_status),a
 	pop	af
-	out	(phi2),a
+	out	(phi_fifo),a
 	ret
 
 
@@ -2821,14 +2834,14 @@ x12f8:	ld	(hl),a
 	bit	1,b
 	call	nz,x127e
 	ld	a,1
-	out	(phi3),a
-	in	a,(phi0)
+	out	(phi_status),a
+	in	a,(phi_int_cond)
 	bit	2,a
 	jr	nz,x132f
 	set	4,(iy+5)
 	call	x13ac
 	xor	a
-	out	(phi3),a
+	out	(phi_status),a
 	ld	b,(hl)
 	inc	hl
 x131a:	ld	c,12h
@@ -2840,7 +2853,7 @@ x131a:	ld	c,12h
 	push	bc
 	ld	b,1
 	ld	a,80h
-	out	(phi3),a
+	out	(phi_status),a
 	jr	x131a
 
 x132e:	push	bc
@@ -2910,41 +2923,41 @@ x1398:	res	5,(iy+5)
 	jp	x1473
 
 x13a2:	ld	a,(x600c)
-	out	(phi3),a
+	out	(phi_status),a
 	ld	a,0dh
-	out	(phi1),a
+	out	(phi_int_mask),a
 	ret
 
 x13ac:	ld	a,40h
-	out	(phi1),a
+	out	(phi_int_mask),a
 	ld	a,80h
-	out	(phi3),a
+	out	(phi_status),a
 	ld	a,40h
-	out	(phi1),a
+	out	(phi_int_mask),a
 	ret
 
 x13b9:	ex	af,af'
 	exx
-	in	a,(phi3)
+	in	a,(phi_status)
 	push	af
 	bit	5,(iy+5)
 	jp	nz,x1422
-	in	a,(phi0)
+	in	a,(phi_int_cond)
 	push	af
 	xor	a
-	out	(phi3),a
+	out	(phi_status),a
 	ld	a,0dh
-	out	(phi1),a
+	out	(phi_int_mask),a
 	ld	bc,0
 	ld	d,26h
-x13d4:	in	a,(phi0)
+x13d4:	in	a,(phi_int_cond)
 	bit	3,a
 	jr	nz,x13f5
 	bit	0,a
 	jr	nz,x140e
 	bit	2,a
 	jr	nz,x1413
-	in	a,(phi3)
+	in	a,(phi_status)
 	bit	2,a
 	jr	z,x1416
 	djnz	x13d4
@@ -2956,7 +2969,7 @@ x13f0:	ld	hl,x1398
 	jr	x1419
 
 x13f5:	pop	af
-	out	(phi0),a
+	out	(phi_int_cond),a
 	call	x13ac
 	pop	af
 	ex	af,af'
@@ -2970,7 +2983,7 @@ x1402:	exx
 	exx
 	ex	af,af'
 x1407:	ex	(sp),hl
-	out	(phi3),a
+	out	(phi_status),a
 	ex	af,af'
 	exx
 	retn
@@ -2982,25 +2995,25 @@ x1413:	call	x1272
 x1416:	ld	hl,x132f
 x1419:	call	x1266
 	pop	af
-	out	(phi0),a
+	out	(phi_int_cond),a
 	pop	af
 	jr	x1407
 
 x1422:	di
-	in	a,(phi0)
+	in	a,(phi_int_cond)
 	push	af
 	xor	a
-	out	(phi3),a
+	out	(phi_status),a
 	ld	a,5
-	out	(phi1),a
+	out	(phi_int_mask),a
 	ld	bc,0
 	ld	d,2dh
-x1432:	in	a,(phi0)
+x1432:	in	a,(phi_int_cond)
 	bit	2,a
 	jr	nz,x144c
 	bit	0,a
 	jr	nz,x144f
-	in	a,(phi3)
+	in	a,(phi_status)
 	bit	1,a
 	jr	z,x13f0
 	djnz	x1432
@@ -3204,7 +3217,7 @@ do_rst20:
 	rst	28h
 	call	sub10
 	ld	b,3ch
-	call	z,x1240
+	call	z,delay
 	in	a,(fdc2)
 	bit	4,a
 	jp	nz,x14eb
@@ -3468,7 +3481,7 @@ x1790:	ld	iy,(x6015)
 x17ab:	jr	x1790
 
 x17ad:	ld	b,14h
-	jp	x1240
+	jp	delay
 
 x17b2:	dec	hl
 	ld	a,(de)
@@ -3744,54 +3757,55 @@ x1950:	ld	a,0
 	ld	c,0fh
 	call	sub13
 	xor	a
-	out	(phi3),a
-	ld	a,80h
-	out	(phi4),a
-	out	(phi4),a
+	out	(phi_status),a
 
-; XXX this might be the identify response
+	ld	a,80h			; set 8-bit processor, clear others
+	out	(phi_control),a
+	out	(phi_control),a		; why twice?
+
+; set up identify response
 	ld	a,0
-	out	(phi6),a
+	out	(phi_id1),a
 	ld	a,81h
-	out	(phi7),a
+	out	(phi_id2),a
 
 	xor	a
-	out	(phi3),a
+	out	(phi_status),a
 	ld	a,7fh
-	out	(phi1),a
+	out	(phi_int_mask),a
 	xor	a
-	out	(phi3),a
+	out	(phi_status),a
 	ld	a,20h
-	out	(phi5),a
+	out	(phi_address),a
 	ld	a,41h
-	out	(phi0),a
-x197a:	in	a,(phi0)
+	out	(phi_int_cond),a
+x197a:	in	a,(phi_int_cond)
 	bit	2,a
 	jr	z,x1984
-	in	a,(phi2)
+	in	a,(phi_fifo)
 	jr	x197a
 
 x1984:	ld	a,1
-	out	(phi3),a
+	out	(phi_status),a
 	ld	a,10h
-	out	(phi4),a
+	out	(phi_control),a
 	ld	a,89h
-	out	(phi4),a
+	out	(phi_control),a
 	ld	d,0ah
 	ld	c,0
 	call	sub16
 	ld	a,40h
-	out	(phi3),a
+	out	(phi_status),a
 	ld	a,5fh
-	out	(phi2),a
+	out	(phi_fifo),a
 	ld	a,7eh
-	out	(phi2),a
+	out	(phi_fifo),a
 	ld	a,0c0h
-	out	(phi3),a
+	out	(phi_status),a
 	ld	a,2
-	out	(phi2),a
+	out	(phi_fifo),a
 	ld	b,1
-	call	x1240
+	call	delay
 	ld	d,0eh
 	call	sub16
 	ld	c,0
@@ -3804,57 +3818,58 @@ x1984:	ld	a,1
 	ld	d,0ah
 	call	sub16
 	xor	a
-	out	(phi3),a
-	out	(phi5),a
+	out	(phi_status),a
+	out	(phi_address),a
 	ld	a,40h
-	out	(phi3),a
+	out	(phi_status),a
 	ld	a,3fh
-	out	(phi2),a
+	out	(phi_fifo),a
 	ld	a,49h
-	out	(phi2),a
+	out	(phi_fifo),a
 	ld	a,9
-	out	(phi2),a
+	out	(phi_fifo),a
 	call	sub16
 	xor	a
-	out	(phi3),a
+	out	(phi_status),a
 	ld	a,40h
-	out	(phi5),a
+	out	(phi_address),a
 	ld	a,60h
-	out	(phi5),a
+	out	(phi_address),a
 	ld	a,0ffh
 	ld	b,10h
-x19f1:	out	(phi2),a
+x19f1:	out	(phi_fifo),a
 	dec	a
 	djnz	x19f1
 	ld	c,0
 	ld	d,4
 	call	sub16
+
 	ld	c,0
 	ld	d,0ffh
 	ld	b,10h
 x1a03:	call	sub17
 	dec	d
 	djnz	x1a03
+
 	ld	c,0
 	ld	d,0ah
 	call	sub16
 
-; XXX this might be the identify response
 	xor	a
-	out	(phi3),a
-	ld	a,81h
-	out	(phi4),a
+	out	(phi_status),a
+	ld	a,81h			; set 8-bit processor and
+	out	(phi_control),a		;   initialize outbound FIFO
 
 	jp	x1741
 
 
-sub16:	in	a,(phi0)
+sub16:	in	a,(phi_int_cond)
 	jr	x1a20
 
-sub17:	in	a,(phi2)
+sub17:	in	a,(phi_fifo)
 x1a20:	cp	d
 x1a21:	jr	nz,x1a21
-	in	a,(phi3)
+	in	a,(phi_status)	; check high order bits
 	and	0c0h
 	cp	c
 x1a28:	jr	nz,x1a28
@@ -3870,19 +3885,19 @@ x1a28:	jr	nz,x1a28
 x1a3d:	ld	b,0fah
 	ld	a,1
 	out	(fdc2),a
-	call	x1240
+	call	delay
 	out	(fdc2),a
-	call	x1240
+	call	delay
 	out	(fdc2),a
-	call	x1240
+	call	delay
 	ld	b,64h
-	call	x1240
+	call	delay
 	in	a,(fdc3)
 	bit	6,a
 	jp	nz,x1f3d
-	call	x1240
+	call	delay
 	ld	b,0fah
-	call	x1240
+	call	delay
 	in	a,(fdc3)
 	bit	6,a
 	jp	z,x1f3e
@@ -4470,8 +4485,8 @@ x1ee5:	ld	(hl),a
 	bit	4,a
 	ret	z
 	ld	b,0fah
-	call	x1240
-	call	x1240
+	call	delay
+	call	delay
 x1f19:	ld	b,a
 	ld	a,(x6014)
 	or	a
@@ -4525,7 +4540,7 @@ x1f51:	sla	l
 	bit	5,a
 	jr	z,x1f90
 	ld	b,0c8h
-	call	x1240
+	call	delay
 	ld	a,(x6008)
 	and	30h
 	ld	(x6008),a
@@ -4548,7 +4563,7 @@ x1fa5:	push	af
 	ld	d,80h
 	call	x155f
 	ld	b,64h
-	call	x1240
+	call	delay
 	pop	af
 	dec	a
 	jr	nz,x1fa5
