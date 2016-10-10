@@ -5,6 +5,18 @@
 ; Cross-assembles with Macro Assembler AS:
 ;   http://john.ccac.rwth-aachen.de:8000/as/
 
+; Marketing blurb about PHI chip:
+;   Hewlett-Packard Computer Advances, Volume 2 Number 4, November 1977
+;   included in Computerworld, Volume XI Number 46, November 14, 1977
+;
+; General description of the PHI chip:
+;   "PHI, the HP-IB Interface Chip", John W. Figueroa,
+;   Hewlett Packard Journal, Volume 29 Number 11, July 1978, pp. 16-16
+;
+; Detailed information about PHI chip:
+;   "HP 12009A HP-IB Interface Reference Manual",
+;   manual part number 12009-90001, September 1982
+
 	org	0
 
 fillto	macro	endaddr,value
@@ -19,23 +31,77 @@ fillto	macro	endaddr,value
 
 
 ; I/O ports
-io10	equ	10h
-io11	equ	11h
-io12	equ	12h
-io13	equ	13h
-io14	equ	14h
-io15	equ	15h
-io16	equ	16h
-io17	equ	17h
 
-io60	equ	60h
-io61	equ	61h
-io62	equ	62h
-io63	equ	63h
-io64	equ	64h
-io65	equ	65h
-io66	equ	66h
-io67	equ	67h
+
+; PHI chip (Processor to Hpib Interface)
+
+; XXX While the ports are 10h..17h, I think these specific assignments
+; are wrong. Maybe address bits are permuted and/or inverted?  See e.g.
+; the sequences that write 00h and 81h to two registers, which could be
+; the identify response if written to phi_id1 and phi_id2.
+
+phi0	equ	10h
+phi1	equ	11h
+phi2	equ	12h
+phi3	equ	13h
+phi4	equ	14h
+phi5	equ	15h
+phi6	equ	16h
+phi7	equ	17h
+
+
+;phi_fifo	equ	10h	; bit 15..14: 00 - RX/TX normal data
+				;             01 - RX secondary address
+				;	      01 - TX interface command
+				; 	      10 - TX byte count
+				;             11 - RX end
+				;	      11 - TX uncounted transfer enable
+				; bits 7..0: data
+
+;phi_status	equ	11h	; bits 7..6: high order bit access
+				; bit 5: REM
+				; bit 4: Controller
+				; bit 3: System Controller
+				; bit 2: Addressed to talk or identify
+				; bit 1: Addressed to listen
+				; bit 0: Outbound data freeze
+
+;phi_int_cond	equ	12h	; bit 7: status change
+				; bit 6: processor handshake abort
+				; bit 5: parallel poll response
+				; bit 4: service request
+				; bit 3: fifo room available
+				; bit 2: fifo bytes available
+				; bit 1: fifo idle
+				; bit 0: device clear
+
+;phi_int_mask	equ	13h
+
+;phi_id1		equ	14h
+;phi_id2		equ	15h
+
+;phi_ctrl	equ	16h	; bit 7: 8-bit processor
+				; bit 6: parity freeze
+				; bit 5: REN value
+				; bit 4: IFC value
+				; bit 3: respond to parallel poll
+				; bit 2: request service
+				; bit 1: DMA fifo select
+				; bit 0: initialize outbound FIFO (write only)
+
+;phi_addr	equ	17h	; bit 7: ONL (online)
+				; bit 6: TA (talk always)
+				; bit 5: LA (listen always)
+				; bits 4..0: HP-IB address
+
+fdc0	equ	60h
+fdc1	equ	61h
+fdc2	equ	62h
+fdc3	equ	63h
+fdc4	equ	64h
+fdc5	equ	65h
+fdc6	equ	66h
+fdc7	equ	67h
 
 
 ; RAM
@@ -66,10 +132,12 @@ x6017:	ds	2
 x6019:	ds	5
 x601e:	ds	40
 x6046:	ds	1
-x6047:	ds	1
-x6048:	ds	1
-x6049:	ds	1
-x604a:	ds	3
+
+x6047:	ds	1	; first byte of command
+x6048:	ds	1	; second byte of command
+x6049:	ds	1	; third byte of command
+x604a:	ds	3	; fourth through sixth bytes of command
+
 x604d:	ds	1
 x604e:	ds	1
 x604f:	ds	1
@@ -133,7 +201,7 @@ x0033:	jp	x0bc8
 
 	ex	af,af'
 	di
-x003a:	in	a,(io13)
+x003a:	in	a,(phi3)
 	exx
 	ld	hl,x135c
 	ex	(sp),hl
@@ -170,13 +238,13 @@ x0074:	xor	a
 x0075:	ld	(x6000),a
 	ld	sp,x63ff
 	xor	a
-	out	(io13),a
+	out	(phi3),a
 	ld	(x600c),a
 	ld	a,0dh
-	out	(io11),a
-	in	a,(io14)
+	out	(phi1),a
+	in	a,(phi4)
 	res	6,a
-	out	(io14),a
+	out	(phi4),a
 x008b:	xor	a
 	ld	(x6001),a
 	ld	(x6002),a
@@ -184,15 +252,15 @@ x008b:	xor	a
 	call	x124d
 	call	x1266
 	xor	a
-	out	(io64),a
-	out	(io13),a
-	out	(io16),a
+	out	(fdc4),a
+	out	(phi3),a
+	out	(phi6),a
 	ld	a,81h
-	out	(io17),a
+	out	(phi7),a
 	ld	a,41h
-	out	(io13),a
+	out	(phi3),a
 	ld	a,0ffh
-	out	(io10),a
+	out	(phi0),a
 	ld	(iy+0dh),3
 x00b2:	ld	a,(x600d)
 	cp	0ffh
@@ -201,14 +269,14 @@ x00b2:	ld	a,(x600d)
 	ld	b,a
 	call	x1507
 	xor	a
-	out	(io65),a
+	out	(fdc5),a
 	ld	(ix+4),a
 	inc	b
 	ld	a,10h
 x00c9:	rrca
 	djnz	x00c9
 	ld	(ix+9),a
-	out	(io66),a
+	out	(fdc6),a
 	call	x1612
 	jr	z,x00ed
 	ld	a,(x6000)
@@ -238,18 +306,18 @@ x00f8:	ld	(ix+5),d
 x0105:	call	x154c
 	jr	x00b2
 
-x010a:	in	a,(io14)
+x010a:	in	a,(phi4)
 	and	40h
 	or	89h
 	ld	b,a
 	ld	a,80h
-	out	(io13),a
+	out	(phi3),a
 	ld	a,b
-	out	(io14),a
-	in	a,(io63)
+	out	(phi4),a
+	in	a,(fdc3)
 	and	7
 	or	80h
-	out	(io15),a
+	out	(phi5),a
 	im	1
 	ld	a,(x6000)
 	cp	2
@@ -275,15 +343,15 @@ x0145:	call	x0154
 x014a:	ld	a,(x6007)
 	set	0,a
 	cpl
-	out	(io63),a
+	out	(fdc3),a
 	jr	x0135
 
 x0154:	call	x1272
 	ld	a,0f9h
-	out	(io63),a
-x015b:	in	a,(io12)
+	out	(fdc3),a
+x015b:	in	a,(phi2)
 	ld	c,a
-	in	a,(io13)
+	in	a,(phi3)
 	bit	6,a
 	jr	nz,x0169
 	call	x01ae
@@ -319,6 +387,9 @@ x0192:	inc	hl
 x0198:	ld	e,(hl)
 	ld	hl,x01e4
 	add	hl,de
+
+
+; execute command handler at address pointed to by HL
 x019d:	ld	e,(hl)
 	inc	hl
 	ld	h,(hl)
@@ -339,7 +410,7 @@ x01ae:	ld	bc,0
 	ld	d,1fh
 x01b3:	call	x1285
 	ret	nz
-	in	a,(io13)
+	in	a,(phi3)
 	and	6
 	jp	z,x1473
 	djnz	x01b3
@@ -364,15 +435,15 @@ x01c9:	db	008h, 004h, 000h
 	db	01eh, 008h, 00ah
 	db	01fh, 00ch, 00eh
 	
-x01e4:	dw	x1473
-	dw	sub6
-	dw	x01f6
-	dw	x01a6
-	dw	x11ea
-	dw	x11db
-	dw	x1206
-	dw	x1225
-	dw	x11f2	; download command
+x01e4:	dw	x1473	; invalid
+	dw	sub6	; talker   11: HP-IB CRC
+	dw	x01f6	; listener 08, 09, 0a, 0b, 0c: commands
+	dw	x01a6	; listener 11: HP-IB CRC
+	dw	x11ea	; listener 1e: read loopback
+	dw	x11db	; talker   1e: write loopback
+	dw	x1206	; listener 1f: initiate self-test
+	dw	x1225	; talker   1f: read self-test
+	dw	x11f2	; listener 0f: download
 
 
 ; listen with secondary address 08, 09, 0a, 0b, 0c
@@ -384,7 +455,7 @@ x01f6:	ld	hl,x6046
 x01fe:	call	x01ae
 	ld	c,12h
 	ini
-x0205:	in	a,(io13)
+x0205:	in	a,(phi3)
 	inc	e
 x0208:	bit	6,a
 	jr	nz,x0210
@@ -405,20 +476,22 @@ x0220:	pop	hl
 
 	ld	hl,x0264
 	ld	d,0
-x0228:	ld	a,c
+x0228:	ld	a,c		; does secondary address match table header?
 	cp	(hl)
-	jr	z,x0238
-	inc	hl
+	jr	z,x0238		; yes
+	inc	hl		; no, get length of table
 	ld	b,(hl)
 	inc	hl
 
-	xor	a		; E := b * 4
+	xor	a		; HL := HL + b * 4
 x0230:	add	a,4
 	djnz	x0230
 	ld	e,a
 	add	hl,de
 	jr	x0228
 
+
+; secondary address found
 x0238:	inc	hl
 	ld	a,(x6047)
 	and	1fh
@@ -428,22 +501,24 @@ x0238:	inc	hl
 	and	0fh
 	ld	(x6048),a
 	ld	a,b
-x024a:	ld	b,(hl)
-	ld	e,4
+x024a:	ld	b,(hl)		; get length of table
+	ld	e,4		; DE := 4 (table entry length)
 	inc	hl
-x024e:	cp	(hl)
-	jr	z,x0257
-	add	hl,de
-	djnz	x024e
-	jp	x147c
+x024e:	cp	(hl)		; does command match?
+	jr	z,x0257		; yes
+	add	hl,de		; no, advance to next entry
+	djnz	x024e		; hit end of table? if not, loop
+	jp	x147c		; command not found
 
-x0257:	inc	hl
+
+; command found
+x0257:	inc	hl		; advance pointer to length byte
 	ld	a,(x6046)
-	cp	(hl)
+	cp	(hl)		; does command length match?
 	jp	nz,x1473
-	inc	hl
+	inc	hl		; advance pointer to dispatch vector
 	pop	de
-	jp	x019d
+	jp	x019d		; dispatch
 
 
 ; command dispatch tables
@@ -545,10 +620,11 @@ x02c7:	ld	a,(x6009)
 	jp	z,x149c
 	ret
 
-x02d0:	in	a,(io62)
+x02d0:	in	a,(fdc2)
 	bit	3,a
 	jp	nz,x149c
 	ret
+
 
 x02d8:	call	x02eb
 	call	x14c1
@@ -560,12 +636,14 @@ x02d8:	call	x02eb
 	ret	z
 	jp	x1464
 
+
 x02eb:	ld	a,(iy+48h)
 	cp	4
 	jp	m,x02fb
 	ld	a,17h
 	call	sub7
 	jp	x1464
+
 
 x02fb:	call	x151a
 	call	x1612
@@ -576,9 +654,10 @@ x030a:	bit	3,(ix+6)
 	jp	nz,x149c
 	ret
 
+
 x0312:	ld	bc,0
 	ld	d,5eh
-x0317:	in	a,(io10)
+x0317:	in	a,(phi0)
 	bit	0,a
 	jr	nz,x032c
 	djnz	x0317
@@ -587,14 +666,14 @@ x0317:	in	a,(io10)
 	dec	d
 	jr	nz,x0317
 x0325:	ld	a,1
-	out	(io10),a
+	out	(phi0),a
 	jp	x1473
 
 x032c:	bit	2,a
 	jr	z,x0325
-	in	a,(io12)
+	in	a,(phi2)
 	ld	b,a
-	in	a,(io13)
+	in	a,(phi3)
 	and	0c0h
 	cp	0c0h
 	jr	nz,x0325
@@ -604,14 +683,14 @@ x032c:	bit	2,a
 	jr	z,x0345
 	ld	a,40h
 x0345:	ld	b,a
-	in	a,(io14)
+	in	a,(phi4)
 	or	b
-	out	(io14),a
+	out	(phi4),a
 	ld	a,b
 	ld	(x600c),a
-	out	(io13),a
+	out	(phi3),a
 	ld	a,0dh
-	out	(io11),a
+	out	(phi1),a
 	bit	6,b
 	jp	nz,x008b
 	call	x1290
@@ -619,7 +698,7 @@ x0345:	ld	b,a
 
 x0360:	push	af
 	call	x1272
-	in	a,(io10)
+	in	a,(phi0)
 	bit	2,a
 	jp	z,x0074
 	pop	af
@@ -676,18 +755,18 @@ x03c9:	call	x154c
 	fillto	03e0h,076h
 
 
-x03e0:	in	a,(io10)
-	in	a,(io13)
+x03e0:	in	a,(phi0)
+	in	a,(phi3)
 	and	40h
 	jr	nz,x0427
-x03e8:	in	a,(io14)
+x03e8:	in	a,(phi4)
 	or	1
-	out	(io14),a
+	out	(phi4),a
 	ld	a,81h
-	out	(io13),a
+	out	(phi3),a
 	ld	a,(x6000)
-	out	(io12),a
-	in	a,(io10)
+	out	(phi2),a
+	in	a,(phi0)
 	bit	2,a
 	jp	nz,x1467
 	ld	a,(x6000)
@@ -711,9 +790,9 @@ x0423:	ld	(x6000),a
 	ret
 
 x0427:	ld	b,40h
-	out	(io13),a
+	out	(phi3),a
 	xor	a
-	out	(io10),a
+	out	(phi0),a
 	ld	(iy+0),3
 	jr	x03e8
 
@@ -781,7 +860,7 @@ x0495:	ld	b,a
 x04a6:	jr	x04c9
 
 x04a8:	set	3,d
-	in	a,(io62)
+	in	a,(fdc2)
 	bit	3,a
 	jr	z,x04b2
 	set	6,d
@@ -812,16 +891,23 @@ x04d6:	ld	a,d
 	fillto	04f0h,076h
 
 
+; Seek command:
+; byte 0: opcode (02h)
+; byte 1: unit number    6048
+; byte 2: cylinder high  6049
+; byte 3: cylinder low   604a
+; byte 4: head           604b
+; byte 5: sector         604c
 cmd_seek:
 	call	x02be
-	call	x02eb
+	call	x02eb		; validate unit number?
 	call	x02c7
-	ld	d,(iy+4bh)
-	ld	b,(iy+4ch)
-	ld	a,(iy+49h)
+	ld	d,(iy+4bh)	; head
+	ld	b,(iy+4ch)	; sector
+	ld	a,(iy+49h)	; cylinder high
 	or	a
 	jp	nz,x1490
-	ld	a,(iy+4ah)
+	ld	a,(iy+4ah)	; cylinder low
 	ld	c,a
 	cp	0
 	jp	m,x1490
@@ -1006,7 +1092,7 @@ sub2:	ld	a,b
 	add	a,(ix+0)
 	cp	0
 	jp	m,x0677
-	in	a,(io62)
+	in	a,(fdc2)
 	bit	2,a
 x0677:	ret	nz
 	jr	x0684
@@ -1045,11 +1131,11 @@ x06a8:	push	bc
 	bit	7,c
 	jr	nz,x06b4
 	set	1,a
-x06b4:	out	(io65),a
+x06b4:	out	(fdc5),a
 	set	0,a
-	out	(io65),a
+	out	(fdc5),a
 	res	0,a
-	out	(io65),a
+	out	(fdc5),a
 	rst	30h
 	ld	b,3
 	call	x1240
@@ -1068,7 +1154,7 @@ do_rst08:
 	res	7,(ix+4)
 	rst	30h
 	ld	b,50h
-x06df:	in	a,(io62)
+x06df:	in	a,(fdc2)
 	bit	2,a
 	jr	nz,x06ee
 	ld	c,0ffh
@@ -1143,7 +1229,7 @@ x075d:	call	x0952
 x0763:	call	x1285
 	pop	hl
 	jp	nz,x07e4
-	in	a,(io13)
+	in	a,(phi3)
 	bit	2,a
 	jp	z,x07e4
 	call	x0c87
@@ -1433,7 +1519,7 @@ x0990:	ld	(ix+3),b
 
 
 do_rst18:
-	in	a,(io62)
+	in	a,(fdc2)
 	bit	4,a
 	jp	z,x1480
 	res	2,(ix+4)
@@ -1455,7 +1541,7 @@ x09b1:	pop	hl
 
 
 sub3:	ld	a,3
-	out	(io62),a
+	out	(fdc2),a
 	ld	a,(ix+2)
 	and	7fh
 	ld	(x600b),a
@@ -1468,9 +1554,9 @@ x09c4:	push	hl
 	push	de
 x09cc:	pop	de
 	xor	a
-	out	(io64),a
+	out	(fdc4),a
 	ld	a,2
-	out	(io62),a
+	out	(fdc2),a
 	push	de
 	ld	a,2
 	ld	b,22h
@@ -1479,28 +1565,28 @@ x09cc:	pop	de
 	ld	e,0eh
 	bit	0,(iy+9)
 	jp	nz,x0a5f
-	out	(io64),a
+	out	(fdc4),a
 x09e8:	db	0edh,70h
 
 	jr	z,x09e8
 	jp	p,x0a56
-	in	a,(io60)
+	in	a,(fdc0)
 	ld	h,a
-	in	a,(io61)
+	in	a,(fdc1)
 	cp	e
 	jr	nz,x09cc
 	ld	a,b
-	out	(io64),a
-	in	a,(io60)
+	out	(fdc4),a
+	in	a,(fdc0)
 	ld	b,a
 	ld	a,h
 	sub	d
 	rl	a
 	jr	nz,x09cc
-	in	a,(io60)
+	in	a,(fdc0)
 	pop	de
 	push	af
-	in	a,(io60)
+	in	a,(fdc0)
 	set	0,d
 	call	sub4
 	pop	af
@@ -1547,65 +1633,65 @@ x0a51:	or	1
 	ret
 
 x0a56:	xor	a
-	out	(io64),a
+	out	(fdc4),a
 	pop	de
 	pop	hl
 	set	0,e
 	jr	x0a51
 
-x0a5f:	out	(io64),a
+x0a5f:	out	(fdc4),a
 x0a61:	db	0edh,70h
 
 	jr	z,x0a61
 	jp	p,x0a56
 	ld	a,b
-	out	(io64),a
-	in	a,(io60)
+	out	(fdc4),a
+	in	a,(fdc0)
 	ld	b,a
-	in	a,(io61)
+	in	a,(fdc1)
 	cp	0c7h
 	jp	nz,x09cc
 	ld	a,b
 	cp	0feh
 	jp	nz,x09cc
-	in	a,(io60)
+	in	a,(fdc0)
 	pop	de
 	ld	b,a
 	cp	(iy+0bh)
 	jr	z,x0a86
 	set	6,d
-x0a86:	in	a,(io60)
+x0a86:	in	a,(fdc0)
 	cp	0
 	jr	z,x0a8e
 	set	5,d
-x0a8e:	in	a,(io60)
+x0a8e:	in	a,(fdc0)
 	ld	c,a
 	cp	(ix+3)
 	jr	z,x0a98
 	set	7,d
-x0a98:	in	a,(io60)
+x0a98:	in	a,(fdc0)
 	cp	0
 	jr	z,x0aa0
 	set	4,d
-x0aa0:	in	a,(io60)
+x0aa0:	in	a,(fdc0)
 	set	0,d
 	call	sub4
 	jp	x0a37
 
 
-sub4:	in	a,(io60)
+sub4:	in	a,(fdc0)
 	ld	a,(ix+4)
 	ld	h,a
 	and	0f3h
-	out	(io65),a
-	in	a,(io60)
+	out	(fdc5),a
+	in	a,(fdc0)
 	ld	a,h
 	and	0f7h
-	out	(io65),a
-x0abb:	in	a,(io62)
+	out	(fdc5),a
+x0abb:	in	a,(fdc2)
 	ld	l,a
 	xor	a
-	out	(io64),a
+	out	(fdc4),a
 	ld	a,l
 	and	70h
 	or	e
@@ -1625,7 +1711,7 @@ x0ad9:	push	hl
 	ld	h,a
 	push	bc
 	ld	a,2
-	out	(io64),a
+	out	(fdc4),a
 	set	3,e
 	push	de
 	ld	b,0beh
@@ -1638,15 +1724,15 @@ x0ad9:	push	hl
 x0af4:	db	0edh,70h
 
 	jp	p,x0b32
-	in	a,(io60)
+	in	a,(fdc0)
 	and	e
 	ld	e,a
-	in	a,(io61)
+	in	a,(fdc1)
 	cp	d
 	jr	nz,x0b42
 	ld	a,l
-	out	(io64),a
-	in	a,(io60)
+	out	(fdc4),a
+	in	a,(fdc0)
 	ld	d,a
 	ld	a,e
 	cp	50h
@@ -1654,7 +1740,7 @@ x0af4:	db	0edh,70h
 	ld	hl,x604f
 	ld	(hl),d
 	dec	hl
-	in	a,(io60)
+	in	a,(fdc0)
 	ld	(hl),a
 	inc	hl
 	inc	hl
@@ -1665,7 +1751,7 @@ x0b1b:	inc	hl
 	ini
 	inc	hl
 	jr	nz,x0b1b
-x0b23:	in	a,(io60)
+x0b23:	in	a,(fdc0)
 	pop	de
 	ld	(hl),1
 	call	sub4
@@ -1679,7 +1765,7 @@ x0b32:	djnz	x0af4
 	dec	h
 	jr	nz,x0af4
 x0b37:	xor	a
-	out	(io64),a
+	out	(fdc4),a
 	pop	de
 	set	1,e
 	inc	a
@@ -1688,9 +1774,9 @@ x0b37:	xor	a
 x0b40:	ld	d,0eh
 x0b42:	ld	e,7fh
 	xor	a
-	out	(io64),a
+	out	(fdc4),a
 	ld	a,2
-	out	(io64),a
+	out	(fdc4),a
 	bit	0,(iy+9)
 	jr	z,x0b32
 	jr	x0b82
@@ -1699,14 +1785,14 @@ x0b53:	db	0edh,70h
 
 	jp	p,x0b82
 	ld	a,l
-	out	(io64),a
-	in	a,(io60)
+	out	(fdc4),a
+	in	a,(fdc0)
 	sub	0f8h
 	jr	z,x0b65
 	cp	3
 	jr	nz,x0b42
 x0b65:	ld	d,a
-	in	a,(io61)
+	in	a,(fdc1)
 	cp	0c7h
 	jr	nz,x0b42
 	ld	c,60h
@@ -1781,48 +1867,48 @@ x0be1:	ld	a,1ch
 	ld	b,2bh
 x0bf8:	djnz	x0bf8
 	ld	a,4
-	out	(io64),a
+	out	(fdc4),a
 	xor	a
-	out	(io61),a
-	out	(io60),a
+	out	(fdc1),a
+	out	(fdc0),a
 	ld	a,0ch
-	out	(io64),a
+	out	(fdc4),a
 	xor	a
-	out	(io60),a
+	out	(fdc0),a
 	ld	c,60h
-	out	(io60),a
-	out	(io60),a
+	out	(fdc0),a
+	out	(fdc0),a
 	ld	b,4
 	dec	a
-x0c13:	out	(io60),a
+x0c13:	out	(fdc0),a
 	djnz	x0c13
 	ld	a,38h
-	out	(io61),a
+	out	(fdc1),a
 	ld	a,50h
-	out	(io60),a
+	out	(fdc0),a
 	xor	a
-	out	(io61),a
+	out	(fdc1),a
 	ld	b,a
 	ld	a,2ch
-	out	(io64),a
+	out	(fdc4),a
 x0c27:	inc	hl
 	outd
 	outi
 	inc	hl
 	jr	nz,x0c27
 x0c2f:	ld	a,3ch
-	out	(io64),a
+	out	(fdc4),a
 	xor	a
-	out	(io60),a
-	out	(io60),a
+	out	(fdc0),a
+	out	(fdc0),a
 	ld	a,0ch
-	out	(io64),a
+	out	(fdc4),a
 	ld	a,b
-	out	(io60),a
-	out	(io60),a
+	out	(fdc0),a
+	out	(fdc0),a
 	call	x0abb
 x0c44:	xor	a
-	out	(io64),a
+	out	(fdc4),a
 	call	x14eb
 	pop	hl
 	ret
@@ -1830,28 +1916,28 @@ x0c44:	xor	a
 x0c4c:	ld	b,47h
 x0c4e:	djnz	x0c4e
 	ld	a,4
-	out	(io64),a
+	out	(fdc4),a
 	ld	b,5
 	ld	a,0ffh
-	out	(io61),a
+	out	(fdc1),a
 	xor	a
-	out	(io60),a
+	out	(fdc0),a
 	ld	a,0ch
-	out	(io64),a
+	out	(fdc4),a
 	xor	a
-x0c62:	out	(io60),a
+x0c62:	out	(fdc0),a
 	djnz	x0c62
 	ld	a,2ch
-	out	(io64),a
+	out	(fdc4),a
 	ld	a,0c7h
-	out	(io61),a
+	out	(fdc1),a
 	ld	a,0fbh
 	bit	2,(iy+5)
 	jr	z,x0c78
 	ld	a,0f8h
-x0c78:	out	(io60),a
+x0c78:	out	(fdc0),a
 	ld	a,0ffh
-	out	(io61),a
+	out	(fdc1),a
 	ld	b,80h
 	ld	c,60h
 	otir
@@ -2116,30 +2202,30 @@ x0ea2:	push	af
 	ld	(ix+0),a
 	ld	b,0
 	xor	a
-	out	(io61),a
-x0ec1:	in	a,(io62)
+	out	(fdc1),a
+x0ec1:	in	a,(fdc2)
 	bit	4,a
 	jp	z,x0f7f
 	bit	0,a
 	jr	z,x0ec1
 	ld	a,2
-	out	(io62),a
+	out	(fdc2),a
 	ld	a,0ch
-	out	(io64),a
+	out	(fdc4),a
 x0ed4:	out	(c),b
-	in	a,(io62)
+	in	a,(fdc2)
 	bit	4,a
 	jp	z,x0f7f
 	bit	0,a
 	jr	nz,x0ed4
 x0ee1:	out	(c),b
-	in	a,(io62)
+	in	a,(fdc2)
 	bit	4,a
 	jp	z,x0f7f
 	bit	0,a
 	jr	z,x0ee1
 x0eee:	out	(c),b
-	in	a,(io62)
+	in	a,(fdc2)
 	bit	0,a
 	jr	nz,x0eee
 x0ef6:	ld	hl,x606b
@@ -2153,37 +2239,37 @@ x0f04:	outi
 	ld	(ix+1),a
 	otir
 	ld	a,38h
-	out	(io61),a
+	out	(fdc1),a
 	outi
 	xor	a
-	out	(io61),a
+	out	(fdc1),a
 	ld	a,2ch
-	out	(io64),a
+	out	(fdc4),a
 	outi
 	outi
 	ld	a,3ch
-	out	(io64),a
+	out	(fdc4),a
 	outi
 	outi
 	ld	a,0ch
-	out	(io64),a
+	out	(fdc4),a
 	ld	b,19h
 	otir
 	ld	a,38h
-	out	(io61),a
+	out	(fdc1),a
 	outi
 	xor	a
-	out	(io61),a
+	out	(fdc1),a
 	ld	b,a
 	ld	a,2ch
-	out	(io64),a
+	out	(fdc4),a
 	otir
 	ld	a,3ch
-	out	(io64),a
+	out	(fdc4),a
 	outi
 	outi
 	ld	a,0ch
-	out	(io64),a
+	out	(fdc4),a
 	ld	b,23h
 	outi
 	ld	a,(x6010)
@@ -2204,8 +2290,8 @@ x0f59:	ld	(x6010),a
 	jr	x0ef6
 
 x0f6e:	xor	a
-	out	(io64),a
-	in	a,(io62)
+	out	(fdc4),a
+	in	a,(fdc2)
 	bit	6,a
 	jr	nz,x0f7f
 	ld	b,98h
@@ -2215,7 +2301,7 @@ x0f79:	djnz	x0f79
 	ret
 
 x0f7f:	xor	a
-	out	(io64),a
+	out	(fdc4),a
 	pop	ix
 	or	1
 	ret
@@ -2385,27 +2471,27 @@ x1060:	ld	b,2eh
 	ld	(ix+1),a
 	ld	(ix+3),a
 x107e:	ld	a,0ffh
-	out	(io61),a
-x1082:	in	a,(io62)
+	out	(fdc1),a
+x1082:	in	a,(fdc2)
 	bit	4,a
 	jp	z,x0f7f
 	bit	0,a
 	jr	nz,x1082
-x108d:	in	a,(io62)
+x108d:	in	a,(fdc2)
 	bit	4,a
 	jp	z,x0f7f
 	bit	0,a
 	jr	z,x108d
 	ld	a,2
-	out	(io62),a
+	out	(fdc2),a
 	ld	a,0ch
-	out	(io64),a
+	out	(fdc4),a
 	otir
 	ld	a,0d7h
-	out	(io61),a
+	out	(fdc1),a
 	outi
 	ld	a,0ffh
-	out	(io61),a
+	out	(fdc1),a
 	ld	b,1ah
 	otir
 x10b0:	ld	b,6
@@ -2417,37 +2503,37 @@ x10b0:	ld	b,6
 x10bc:	ld	(ix+2),a
 	otir
 	ld	a,2ch
-	out	(io64),a
+	out	(fdc4),a
 	ld	a,0c7h
-	out	(io61),a
+	out	(fdc1),a
 	outi
 	ld	a,0ffh
-	out	(io61),a
+	out	(fdc1),a
 	ld	b,4
 	otir
 	ld	a,3ch
-	out	(io64),a
+	out	(fdc4),a
 	outi
 	outi
 	ld	a,0ch
-	out	(io64),a
+	out	(fdc4),a
 	ld	b,11h
 	otir
 	ld	a,2ch
-	out	(io64),a
+	out	(fdc4),a
 	ld	a,0c7h
-	out	(io61),a
+	out	(fdc1),a
 	outi
 	ld	a,0ffh
-	out	(io61),a
+	out	(fdc1),a
 	ld	b,80h
 	otir
 	ld	a,3ch
-	out	(io64),a
+	out	(fdc4),a
 	outi
 	outi
 	ld	a,0ch
-	out	(io64),a
+	out	(fdc4),a
 	ld	b,1ah
 	outi
 	ld	a,(x6010)
@@ -2466,7 +2552,7 @@ x1113:	ld	(x6010),a
 	jr	nz,x10b0
 	dec	b
 x1123:	out	(c),b
-	in	a,(io62)
+	in	a,(fdc2)
 	bit	4,a
 	jp	z,x0f7f
 	bit	0,a
@@ -2561,6 +2647,8 @@ x11d3:	ld	c,0
 	call	x02be
 	jp	x006d
 
+
+; write loopback
 x11db:	ld	a,0ffh
 x11dd:	ld	hl,x604d
 	ld	b,3
@@ -2569,13 +2657,15 @@ x11dd:	ld	hl,x604d
 	ld	(x6001),a
 	ret
 
+
+; read loopback
 x11ea:	ld	hl,x604d
 	xor	a
 	call	x1344
 	ret
 
 
-; download command
+; download
 x11f2:	call	x11ea
 	ld	a,(x600a)
 	cp	0c0h
@@ -2587,6 +2677,7 @@ x11f2:	call	x11ea
 	jp	(hl)
 
 
+; initiate self-test
 x1206:	ld	hl,x604d
 	xor	a
 	call	x1344
@@ -2601,6 +2692,8 @@ x121c:	ld	a,d
 	jp	nc,x1490
 	jp	x1722
 
+
+; read self-test
 x1225:	ld	hl,(x6007)
 	ld	a,h
 	ld	h,l
@@ -2622,6 +2715,7 @@ x1247:	djnz	x1247
 	djnz	x1240
 	ret
 
+
 x124d:	pop	hl
 	xor	a
 	ld	(x6005),a
@@ -2632,42 +2726,44 @@ x124d:	pop	hl
 	ld	ix,x601e
 	jp	(hl)
 
-x1266:	in	a,(io11)
+
+x1266:	in	a,(phi1)
 	ld	b,a
 	ld	a,(x600c)
-	out	(io13),a
+	out	(phi3),a
 	ld	a,b
-	out	(io11),a
+	out	(phi1),a
 	ret
 
-x1272:	in	a,(io14)
+
+x1272:	in	a,(phi4)
 	and	0f7h
 	jr	x1282
 
-x1278:	in	a,(io14)
+x1278:	in	a,(phi4)
 	or	8
 	jr	x1282
 
-x127e:	in	a,(io14)
+x127e:	in	a,(phi4)
 	or	1
-x1282:	out	(io14),a
+x1282:	out	(phi4),a
 	ret
 
-x1285:	in	a,(io10)
+x1285:	in	a,(phi0)
 	bit	2,a
 	ret	nz
 	bit	0,a
 	call	nz,x000b
 	ret
 
-x1290:	in	a,(io10)
-	in	a,(io13)
+x1290:	in	a,(phi0)
+	in	a,(phi3)
 	bit	6,a
 	ret	z
 	ld	b,40h
-	out	(io13),a
+	out	(phi3),a
 	xor	a
-	out	(io10),a
+	out	(phi0),a
 	ld	(iy+0),3
 	ret
 
@@ -2687,9 +2783,9 @@ x12b1:	call	x1285
 	jp	x1473
 
 x12c1:	call	x1272
-	in	a,(io12)
+	in	a,(phi2)
 	ld	c,a
-	in	a,(io13)
+	in	a,(phi3)
 	bit	6,a
 	jp	z,x1473
 	call	x1290
@@ -2701,13 +2797,13 @@ x12c1:	call	x1272
 
 x12da:	push	af
 	ld	a,1
-	out	(io13),a
+	out	(phi3),a
 	call	x1285
 	jp	nz,x1467
 	ld	a,b
-	out	(io13),a
+	out	(phi3),a
 	pop	af
-	out	(io12),a
+	out	(phi2),a
 	ret
 
 
@@ -2725,14 +2821,14 @@ x12f8:	ld	(hl),a
 	bit	1,b
 	call	nz,x127e
 	ld	a,1
-	out	(io13),a
-	in	a,(io10)
+	out	(phi3),a
+	in	a,(phi0)
 	bit	2,a
 	jr	nz,x132f
 	set	4,(iy+5)
 	call	x13ac
 	xor	a
-	out	(io13),a
+	out	(phi3),a
 	ld	b,(hl)
 	inc	hl
 x131a:	ld	c,12h
@@ -2744,7 +2840,7 @@ x131a:	ld	c,12h
 	push	bc
 	ld	b,1
 	ld	a,80h
-	out	(io13),a
+	out	(phi3),a
 	jr	x131a
 
 x132e:	push	bc
@@ -2814,41 +2910,41 @@ x1398:	res	5,(iy+5)
 	jp	x1473
 
 x13a2:	ld	a,(x600c)
-	out	(io13),a
+	out	(phi3),a
 	ld	a,0dh
-	out	(io11),a
+	out	(phi1),a
 	ret
 
 x13ac:	ld	a,40h
-	out	(io11),a
+	out	(phi1),a
 	ld	a,80h
-	out	(io13),a
+	out	(phi3),a
 	ld	a,40h
-	out	(io11),a
+	out	(phi1),a
 	ret
 
 x13b9:	ex	af,af'
 	exx
-	in	a,(io13)
+	in	a,(phi3)
 	push	af
 	bit	5,(iy+5)
 	jp	nz,x1422
-	in	a,(io10)
+	in	a,(phi0)
 	push	af
 	xor	a
-	out	(io13),a
+	out	(phi3),a
 	ld	a,0dh
-	out	(io11),a
+	out	(phi1),a
 	ld	bc,0
 	ld	d,26h
-x13d4:	in	a,(io10)
+x13d4:	in	a,(phi0)
 	bit	3,a
 	jr	nz,x13f5
 	bit	0,a
 	jr	nz,x140e
 	bit	2,a
 	jr	nz,x1413
-	in	a,(io13)
+	in	a,(phi3)
 	bit	2,a
 	jr	z,x1416
 	djnz	x13d4
@@ -2860,7 +2956,7 @@ x13f0:	ld	hl,x1398
 	jr	x1419
 
 x13f5:	pop	af
-	out	(io10),a
+	out	(phi0),a
 	call	x13ac
 	pop	af
 	ex	af,af'
@@ -2874,7 +2970,7 @@ x1402:	exx
 	exx
 	ex	af,af'
 x1407:	ex	(sp),hl
-	out	(io13),a
+	out	(phi3),a
 	ex	af,af'
 	exx
 	retn
@@ -2886,25 +2982,25 @@ x1413:	call	x1272
 x1416:	ld	hl,x132f
 x1419:	call	x1266
 	pop	af
-	out	(io10),a
+	out	(phi0),a
 	pop	af
 	jr	x1407
 
 x1422:	di
-	in	a,(io10)
+	in	a,(phi0)
 	push	af
 	xor	a
-	out	(io13),a
+	out	(phi3),a
 	ld	a,5
-	out	(io11),a
+	out	(phi1),a
 	ld	bc,0
 	ld	d,2dh
-x1432:	in	a,(io10)
+x1432:	in	a,(phi0)
 	bit	2,a
 	jr	nz,x144c
 	bit	0,a
 	jr	nz,x144f
-	in	a,(io13)
+	in	a,(phi3)
 	bit	1,a
 	jr	z,x13f0
 	djnz	x1432
@@ -2998,7 +3094,7 @@ do_rst28:
 	ld	(hl),a
 x14e2:	ld	(x6017),hl
 	cpl
-	out	(io63),a
+	out	(fdc3),a
 	pop	hl
 	pop	af
 	ret
@@ -3061,14 +3157,14 @@ x1544:	ld	(ix+9),a
 	pop	de
 	ret
 
-x154c:	in	a,(io62)
+x154c:	in	a,(fdc2)
 	bit	1,a
 	jr	z,x1556
 	set	7,(ix+9)
 x1556:	ld	a,4
 	ld	(x6004),a
 	xor	a
-	out	(io66),a
+	out	(fdc6),a
 	ret
 
 x155f:	ld	a,(x6006)
@@ -3109,7 +3205,7 @@ do_rst20:
 	call	sub10
 	ld	b,3ch
 	call	z,x1240
-	in	a,(io62)
+	in	a,(fdc2)
 	bit	4,a
 	jp	nz,x14eb
 	call	sub11
@@ -3143,24 +3239,24 @@ x15e8:	ld	a,(ix+9)
 	ret
 
 
-sub12:	in	a,(io62)
+sub12:	in	a,(fdc2)
 	bit	1,a
 	jr	z,x15fd
 	set	7,(ix+9)
 x15fd:	xor	a
-	out	(io66),a
+	out	(fdc6),a
 	ld	a,(ix+4)
-	out	(io65),a
+	out	(fdc5),a
 	ld	a,(ix+9)
-	out	(io66),a
+	out	(fdc6),a
 
 do_rst30:
 	ld	a,(ix+4)
 	and	0f7h
-	out	(io65),a
+	out	(fdc5),a
 	ret
 
-x1612:	in	a,(io62)
+x1612:	in	a,(fdc2)
 	bit	1,a
 	jr	nz,x162a
 	bit	7,(ix+9)
@@ -3217,11 +3313,11 @@ x1670:	res	4,(ix+4)
 	set	4,(ix+4)
 x167c:	rst	30h
 	ld	a,(ix+9)
-	out	(io66),a
+	out	(fdc6),a
 	ret
 
 x1683:	res	3,e
-	in	a,(io62)
+	in	a,(fdc2)
 	bit	7,a
 	ret	z
 	set	3,e
@@ -3291,7 +3387,7 @@ x16fa:	ld	(ix+5),a
 	ld	a,(x6003)
 	call	x151a
 	call	sub10
-	in	a,(io62)
+	in	a,(fdc2)
 	bit	4,a
 	ret	nz
 	ret	z
@@ -3306,18 +3402,18 @@ x1722:	jr	x1733
 
 x1724:	xor	a
 	ld	d,a
-	out	(io63),a
+	out	(fdc3),a
 	set	7,a
-	out	(io67),a
-	in	a,(io63)
+	out	(fdc7),a
+	in	a,(fdc3)
 	and	8
 	ld	e,a
 	set	4,e
 x1733:	di
 	ld	a,8
-	out	(io62),a
+	out	(fdc2),a
 	xor	a
-	out	(io64),a
+	out	(fdc4),a
 	ld	sp,x63ff
 	jp	x17e3
 
@@ -3333,7 +3429,7 @@ x1754:	rrca
 	djnz	x1754
 	ld	(ix+9),a
 	push	af
-	out	(io66),a
+	out	(fdc6),a
 	rst	8
 	jr	z,x1769
 	pop	af
@@ -3352,7 +3448,7 @@ x1777:	pop	bc
 	bit	2,b
 	jr	z,x174d
 	xor	a
-	out	(io66),a
+	out	(fdc6),a
 	set	6,(iy+13h)
 x1784:	ld	bc,x17b2
 	ld	(x6015),bc
@@ -3404,10 +3500,10 @@ x17c8:	sbc	a,h
 sub13:	ld	b,a
 	ld	(x6007),bc
 	cpl
-	out	(io67),a
+	out	(fdc7),a
 	ld	a,c
 	cpl
-	out	(io63),a
+	out	(fdc3),a
 x17dc:	ret
 
 
@@ -3416,9 +3512,9 @@ x17dd:	ld	bc,(x6007)
 	ret
 
 x17e3:	ld	a,0c0h
-	out	(io63),a
+	out	(fdc3),a
 	ld	a,0ffh
-	out	(io67),a
+	out	(fdc7),a
 	ld	a,0
 	add	a,a
 	jr	z,x17f2
@@ -3501,9 +3597,9 @@ x1862:	jr	x1862
 
 startup1:
 	ld	a,0a0h
-	out	(io63),a
+	out	(fdc3),a
 	ld	a,0ffh
-	out	(io67),a
+	out	(fdc7),a
 	ld	b,0a5h
 	push	bc
 	pop	af
@@ -3539,9 +3635,9 @@ x189f:	jr	nz,x189f
 	ret
 
 x18a4:	ld	a,0fch
-	out	(io63),a
+	out	(fdc3),a
 	ld	a,0ffh
-	out	(io67),a
+	out	(fdc7),a
 
 romcsum:
 	ld	ix,x1ffe-1
@@ -3629,15 +3725,15 @@ x192b:	and	0f0h
 	ld	a,0f4h
 	jr	nz,x193a
 	ld	a,0f2h
-x193a:	out	(io63),a
+x193a:	out	(fdc3),a
 	ld	a,0ffh
-	out	(io67),a
+	out	(fdc7),a
 x1940:	jr	x1940
 
 x1942:	ld	a,0f6h
-	out	(io63),a
+	out	(fdc3),a
 	ld	a,0ffh
-	out	(io67),a
+	out	(fdc7),a
 x194a:	jr	x194a
 
 x194c:	rst	38h
@@ -3648,49 +3744,52 @@ x1950:	ld	a,0
 	ld	c,0fh
 	call	sub13
 	xor	a
-	out	(io13),a
+	out	(phi3),a
 	ld	a,80h
-	out	(io14),a
-	out	(io14),a
+	out	(phi4),a
+	out	(phi4),a
+
+; XXX this might be the identify response
 	ld	a,0
-	out	(io16),a
+	out	(phi6),a
 	ld	a,81h
-	out	(io17),a
+	out	(phi7),a
+
 	xor	a
-	out	(io13),a
+	out	(phi3),a
 	ld	a,7fh
-	out	(io11),a
+	out	(phi1),a
 	xor	a
-	out	(io13),a
+	out	(phi3),a
 	ld	a,20h
-	out	(io15),a
+	out	(phi5),a
 	ld	a,41h
-	out	(io10),a
-x197a:	in	a,(io10)
+	out	(phi0),a
+x197a:	in	a,(phi0)
 	bit	2,a
 	jr	z,x1984
-	in	a,(io12)
+	in	a,(phi2)
 	jr	x197a
 
 x1984:	ld	a,1
-	out	(io13),a
+	out	(phi3),a
 	ld	a,10h
-	out	(io14),a
+	out	(phi4),a
 	ld	a,89h
-	out	(io14),a
+	out	(phi4),a
 	ld	d,0ah
 	ld	c,0
 	call	sub16
 	ld	a,40h
-	out	(io13),a
+	out	(phi3),a
 	ld	a,5fh
-	out	(io12),a
+	out	(phi2),a
 	ld	a,7eh
-	out	(io12),a
+	out	(phi2),a
 	ld	a,0c0h
-	out	(io13),a
+	out	(phi3),a
 	ld	a,2
-	out	(io12),a
+	out	(phi2),a
 	ld	b,1
 	call	x1240
 	ld	d,0eh
@@ -3705,26 +3804,26 @@ x1984:	ld	a,1
 	ld	d,0ah
 	call	sub16
 	xor	a
-	out	(io13),a
-	out	(io15),a
+	out	(phi3),a
+	out	(phi5),a
 	ld	a,40h
-	out	(io13),a
+	out	(phi3),a
 	ld	a,3fh
-	out	(io12),a
+	out	(phi2),a
 	ld	a,49h
-	out	(io12),a
+	out	(phi2),a
 	ld	a,9
-	out	(io12),a
+	out	(phi2),a
 	call	sub16
 	xor	a
-	out	(io13),a
+	out	(phi3),a
 	ld	a,40h
-	out	(io15),a
+	out	(phi5),a
 	ld	a,60h
-	out	(io15),a
+	out	(phi5),a
 	ld	a,0ffh
 	ld	b,10h
-x19f1:	out	(io12),a
+x19f1:	out	(phi2),a
 	dec	a
 	djnz	x19f1
 	ld	c,0
@@ -3739,20 +3838,23 @@ x1a03:	call	sub17
 	ld	c,0
 	ld	d,0ah
 	call	sub16
+
+; XXX this might be the identify response
 	xor	a
-	out	(io13),a
+	out	(phi3),a
 	ld	a,81h
-	out	(io14),a
+	out	(phi4),a
+
 	jp	x1741
 
 
-sub16:	in	a,(io10)
+sub16:	in	a,(phi0)
 	jr	x1a20
 
-sub17:	in	a,(io12)
+sub17:	in	a,(phi2)
 x1a20:	cp	d
 x1a21:	jr	nz,x1a21
-	in	a,(io13)
+	in	a,(phi3)
 	and	0c0h
 	cp	c
 x1a28:	jr	nz,x1a28
@@ -3767,21 +3869,21 @@ x1a28:	jr	nz,x1a28
 	set	1,(iy+13h)
 x1a3d:	ld	b,0fah
 	ld	a,1
-	out	(io62),a
+	out	(fdc2),a
 	call	x1240
-	out	(io62),a
+	out	(fdc2),a
 	call	x1240
-	out	(io62),a
+	out	(fdc2),a
 	call	x1240
 	ld	b,64h
 	call	x1240
-	in	a,(io63)
+	in	a,(fdc3)
 	bit	6,a
 	jp	nz,x1f3d
 	call	x1240
 	ld	b,0fah
 	call	x1240
-	in	a,(io63)
+	in	a,(fdc3)
 	bit	6,a
 	jp	z,x1f3e
 	ret
@@ -3790,52 +3892,52 @@ x1a3d:	ld	b,0fah
 	ld	c,11h
 	call	sub13
 	xor	a
-	out	(io66),a
+	out	(fdc6),a
 	ld	a,4
-	out	(io64),a
-	out	(io60),a
+	out	(fdc4),a
+	out	(fdc0),a
 	ld	a,2
-	out	(io62),a
-	in	a,(io62)
+	out	(fdc2),a
+	in	a,(fdc2)
 	bit	6,a
 	jp	nz,x1f3f
 	ld	b,0ah
 x1a89:	djnz	x1a89
-	in	a,(io62)
+	in	a,(fdc2)
 	bit	6,a
 	jp	z,x1f40
 	xor	a
-	out	(io64),a
+	out	(fdc4),a
 	ret
 
 	ld	a,1
-	out	(io62),a
+	out	(fdc2),a
 	ld	a,0
 	ld	c,13h
 	call	sub13
 	ld	a,6
-	out	(io64),a
+	out	(fdc4),a
 	ld	a,0e7h
-	out	(io61),a
+	out	(fdc1),a
 	ld	a,0cah
-	out	(io60),a
-	in	a,(io60)
+	out	(fdc0),a
+	in	a,(fdc0)
 	cp	0cah
 	jp	nz,x1f3d
-	in	a,(io61)
+	in	a,(fdc1)
 	cp	0e7h
 	jp	nz,x1f3e
 	xor	a
-	out	(io64),a
+	out	(fdc4),a
 	ret
 
 	ld	a,1
-	out	(io62),a
+	out	(fdc2),a
 	ld	a,0
 	ld	c,13h
 	call	sub13
 	ld	a,10h
-	out	(io66),a
+	out	(fdc6),a
 	ld	l,0
 	call	x1af3
 	jr	nz,x1ae6
@@ -3846,7 +3948,7 @@ x1a89:	djnz	x1a89
 	call	x1af3
 	jr	nz,x1ae6
 	xor	a
-	out	(io64),a
+	out	(fdc4),a
 	ret
 
 x1ae6:	bit	3,a
@@ -3856,12 +3958,12 @@ x1ae6:	bit	3,a
 	jp	x1f3f
 
 x1af3:	xor	a
-	out	(io64),a
-	out	(io61),a
+	out	(fdc4),a
+	out	(fdc1),a
 	ld	a,6
-	out	(io64),a
+	out	(fdc4),a
 	ld	a,0cch
-	out	(io60),a
+	out	(fdc0),a
 	ld	b,2
 	ld	c,60h
 	ld	d,0ffh
@@ -3869,22 +3971,22 @@ x1af3:	xor	a
 x1b08:	out	(c),d
 	djnz	x1b08
 	ld	a,26h
-	out	(io64),a
+	out	(fdc4),a
 	out	(c),d
 	out	(c),d
-	in	a,(io63)
+	in	a,(fdc3)
 	and	80h
 	jr	nz,x1b41
 	ld	a,l
-	out	(io61),a
+	out	(fdc1),a
 	out	(c),e
-	in	a,(io63)
+	in	a,(fdc3)
 	in	b,(c)
 	ld	h,a
-	in	a,(io61)
+	in	a,(fdc1)
 	ld	l,a
 	xor	a
-	out	(io61),a
+	out	(fdc1),a
 	out	(c),e
 	bit	7,h
 	jr	z,x1b45
@@ -3893,7 +3995,7 @@ x1b08:	out	(c),d
 	jr	nz,x1b49
 	out	(c),e
 	ld	a,6
-	out	(io64),a
+	out	(fdc4),a
 	xor	a
 x1b3c:	and	0ffh
 	out	(c),e
@@ -3909,38 +4011,38 @@ x1b49:	ld	a,1
 	jr	x1b3c
 
 	ld	a,1
-	out	(io62),a
+	out	(fdc2),a
 	ld	a,0
 	ld	c,15h
 	call	sub13
 	xor	a
-	out	(io66),a
+	out	(fdc6),a
 	ld	a,4
-	out	(io64),a
-	out	(io60),a
+	out	(fdc4),a
+	out	(fdc0),a
 	ld	a,24h
-	out	(io64),a
+	out	(fdc4),a
 	ld	a,5ch
-	out	(io60),a
-	in	a,(io62)
+	out	(fdc0),a
+	in	a,(fdc2)
 	bit	5,a
 	jp	z,x1f3d
 	ld	a,56h
-	out	(io60),a
+	out	(fdc0),a
 	ld	a,36h
-	out	(io64),a
-	in	a,(io60)
-	in	a,(io60)
+	out	(fdc4),a
+	in	a,(fdc0)
+	in	a,(fdc0)
 	cp	6ch
 	jp	nz,x1f3e
-	in	a,(io60)
+	in	a,(fdc0)
 	cp	0eeh
 	jp	nz,x1f3e
-	in	a,(io62)
+	in	a,(fdc2)
 	bit	5,a
 	jp	nz,x1f3f
 	xor	a
-	out	(io64),a
+	out	(fdc4),a
 	ld	a,(x6013)
 	dec	a
 	ld	(x6013),a
@@ -4004,7 +4106,7 @@ x1bd5:	rst	8
 	jp	nz,x1f41
 	ret	z
 x1c15:	call	x001b
-	in	a,(io62)
+	in	a,(fdc2)
 	bit	2,a
 	ret	nz
 	djnz	x1c15
@@ -4013,7 +4115,7 @@ x1c15:	call	x001b
 	ld	a,(x6008)
 	ld	c,19h
 	call	sub13
-	in	a,(io62)
+	in	a,(fdc2)
 	bit	4,a
 	ret	z
 	xor	a
@@ -4071,7 +4173,7 @@ x1c64:	push	hl
 	ld	(x6015),hl
 	ret
 
-x1c89:	in	a,(io62)
+x1c89:	in	a,(fdc2)
 	bit	4,a
 	jp	z,x1f3e
 	bit	3,a
@@ -4199,7 +4301,7 @@ x1d98:	ld	(ix+3),b
 	ld	a,(x6014)
 	ld	(ix+2),a
 	ld	hl,xf07f
-	in	a,(io63)
+	in	a,(fdc3)
 	bit	3,a
 	jr	z,x1dae
 	set	2,(ix+4)
@@ -4232,7 +4334,7 @@ x1de0:	jp	x1fcb
 
 	bit	3,(iy+13h)
 	ret	nz
-	in	a,(io63)
+	in	a,(fdc3)
 	bit	4,a
 	ret	z
 	ld	a,(x6008)
@@ -4240,7 +4342,7 @@ x1de0:	jp	x1fcb
 	set	1,a
 	ld	c,1dh
 	call	sub13
-	in	a,(io62)
+	in	a,(fdc2)
 	bit	4,a
 	jp	z,x1f40
 	xor	a
@@ -4308,7 +4410,7 @@ x1e95:	ld	a,(x6014)
 
 	call	x1556
 	xor	a
-	out	(io64),a
+	out	(fdc4),a
 	ld	hl,x6003
 	inc	(hl)
 	ld	a,4
@@ -4353,16 +4455,16 @@ x1ee5:	ld	(hl),a
 	jp	x0070
 
 	xor	a
-	out	(io64),a
+	out	(fdc4),a
 	ld	(x6007),a
 	ld	(x6008),a
 	cpl
-	out	(io67),a
+	out	(fdc7),a
 	res	0,a
-	out	(io63),a
+	out	(fdc3),a
 	bit	4,(iy+13h)
 	ret	z
-	in	a,(io63)
+	in	a,(fdc3)
 	bit	5,a
 	jr	nz,x1f19
 	bit	4,a
@@ -4414,10 +4516,10 @@ x1f51:	sla	l
 	pop	af
 	call	sub13
 	xor	a
-	out	(io64),a
+	out	(fdc4),a
 	bit	4,(iy+13h)
 	jr	z,x1fc4
-	in	a,(io63)
+	in	a,(fdc3)
 	bit	4,a
 	jr	z,x1fa0
 	bit	5,a
@@ -4435,7 +4537,7 @@ x1f51:	sla	l
 x1f90:	call	x1556
 x1f93:	ld	d,20h
 	call	x155f
-	in	a,(io63)
+	in	a,(fdc3)
 	bit	4,a
 	jr	nz,x1f93
 	jr	x1fc4
@@ -4450,7 +4552,7 @@ x1fa5:	push	af
 	pop	af
 	dec	a
 	jr	nz,x1fa5
-	in	a,(io63)
+	in	a,(fdc3)
 	bit	5,a
 	jr	z,x1fc4
 	xor	a
