@@ -1,6 +1,8 @@
 ; HP 9895A floppy disk firmware
-; Partially reverse-engineered by Eric Smith <spacewar@gmail.com>
-; and Craig Ruff
+; Mostek MK36610J ROM, HP part number 1818-1391A
+; Reverse-engineering by:
+;   Craig Ruff <cruff@ruffspot.net>
+;   Eric Smith <spacewar@gmail.com>
 
 ; Cross-assembles with Macro Assembler AS:
 ;   http://john.ccac.rwth-aachen.de:8000/as/
@@ -192,6 +194,7 @@ x0033:	jp	x0bc8
 
 	fillto	0038h,076h
 
+; rst38
 	ex	af,af'
 	di
 x003a:	in	a,(phi_status)
@@ -346,29 +349,34 @@ x014a:	ld	a,(x6007)
 	out	(fdc3),a
 	jr	x0135
 
+
 x0154:	call	x1272
 	ld	a,0f9h
 	out	(fdc3),a
-x015b:	in	a,(phi_fifo)
+
+x015b:	in	a,(phi_fifo)	; get a byte from FIFO
 	ld	c,a
-	in	a,(phi_status)
+	in	a,(phi_status)	; get two high-order bits
 	bit	6,a
 	jr	nz,x0169
 	call	x01ae
 	jr	x015b
 
-x0169:	and	0c0h
+x0169:	and	0c0h		; is the received byte a secondary address?
 	cp	40h
-	jp	nz,x1473
-	ld	a,c
+	jp	nz,x1473	; no
+
+	ld	a,c		; yes, is it 30h?
 	cp	30h
-	jp	z,x03e0
+	jp	z,x03e0		; yes XXX what does that mean?
+
 	call	x1290
 
-	ld	a,c		; get secondary address
+	ld	a,c		; get back secondary address
 
-	cp	10h		; don't look up 10h in table
-	jp	z,x0312		;   DSJ (talker), HP-300 clear (listener)
+	cp	10h		; is it 10h?
+	jp	z,x0312		;   yes, don't look it up in table
+				;   DSJ (talker), HP-300 clear (listener)
 
 	and	1fh
 	ld	hl,x01c9
@@ -2868,6 +2876,7 @@ x133b:	pop	bc
 	call	x000b
 	jr	x132f
 
+
 x1344:	push	bc
 	push	de
 	push	hl
@@ -2882,6 +2891,7 @@ x1353:	call	x13ac
 	xor	a
 	ei
 	inir
+
 x135c:	di
 	res	5,(iy+5)
 	ld	c,a
@@ -2911,6 +2921,7 @@ x1384:	call	x14eb
 	pop	bc
 	ret
 
+
 x138a:	res	5,(iy+5)
 	call	x13a2
 	call	x000b
@@ -2935,6 +2946,7 @@ x13ac:	ld	a,40h
 	ld	a,40h
 	out	(phi_int_mask),a
 	ret
+
 
 x13b9:	ex	af,af'
 	exx
