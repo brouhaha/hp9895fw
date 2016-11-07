@@ -1,0 +1,1460 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<title>hp9895</title>
+<!-- 2016-11-07 Mon 17:22 -->
+<meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta  name="generator" content="Org-mode" />
+<meta  name="author" content="F.Ulivi" />
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  .title  { text-align: center; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { color: green; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  pre.src-sh:before    { content: 'sh'; }
+  pre.src-bash:before  { content: 'sh'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-R:before     { content: 'R'; }
+  pre.src-perl:before  { content: 'Perl'; }
+  pre.src-java:before  { content: 'Java'; }
+  pre.src-sql:before   { content: 'SQL'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.right  { text-align: center;  }
+  th.left   { text-align: center;   }
+  th.center { text-align: center; }
+  td.right  { text-align: right;  }
+  td.left   { text-align: left;   }
+  td.center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara:nth-child(2) { display: inline; }
+  .footpara { display: block; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  /*]]>*/-->
+</style>
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2013 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">hp9895</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#sec-1">1. HP9895</a>
+<ul>
+<li><a href="#sec-1-1">1.1. Conn</a></li>
+<li><a href="#sec-1-2">1.2. IC</a>
+<ul>
+<li><a href="#sec-1-2-1">1.2.1. U16 delay line</a></li>
+</ul>
+</li>
+<li><a href="#sec-1-3">1.3. Memory map</a></li>
+<li><a href="#sec-1-4">1.4. I/O map</a>
+<ul>
+<li><a href="#sec-1-4-1">1.4.1. I/O write</a></li>
+<li><a href="#sec-1-4-2">1.4.2. I/O read</a></li>
+</ul>
+</li>
+<li><a href="#sec-1-5">1.5. PHI</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1"><span class="section-number-2">1</span> HP9895</h2>
+<div class="outline-text-2" id="text-1">
+</div><div id="outline-container-sec-1-1" class="outline-3">
+<h3 id="sec-1-1"><span class="section-number-3">1.1</span> Conn</h3>
+<div class="outline-text-3" id="text-1-1">
+<ul class="org-ul">
+<li>P1: floppy drives
+</li>
+<li>J2: test board
+</li>
+<li>J3: 488
+</li>
+<li>P2 &amp; P4: power
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-sec-1-2" class="outline-3">
+<h3 id="sec-1-2"><span class="section-number-3">1.2</span> IC</h3>
+<div class="outline-text-3" id="text-1-2">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="left" />
+
+<col  class="right" />
+
+<col  class="left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left"><b>U</b></th>
+<th scope="col" class="right"><b>Pin</b></th>
+<th scope="col" class="left"><b>What</b></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">U1</td>
+<td class="right">14</td>
+<td class="left">'37</td>
+</tr>
+
+<tr>
+<td class="left">U2</td>
+<td class="right">14</td>
+<td class="left">'86</td>
+</tr>
+
+<tr>
+<td class="left">U3</td>
+<td class="right">14</td>
+<td class="left">'74</td>
+</tr>
+
+<tr>
+<td class="left">U4</td>
+<td class="right">16</td>
+<td class="left">'194</td>
+</tr>
+
+<tr>
+<td class="left">U5</td>
+<td class="right">16</td>
+<td class="left">'298</td>
+</tr>
+
+<tr>
+<td class="left">U6</td>
+<td class="right">16</td>
+<td class="left">'194</td>
+</tr>
+
+<tr>
+<td class="left">U7-8</td>
+<td class="right">?</td>
+<td class="left">Driv 488</td>
+</tr>
+
+<tr>
+<td class="left">U9</td>
+<td class="right">&#xa0;</td>
+<td class="left">N/U</td>
+</tr>
+
+<tr>
+<td class="left">U10-13</td>
+<td class="right">24?</td>
+<td class="left">ROMs</td>
+</tr>
+
+<tr>
+<td class="left">U14</td>
+<td class="right">40</td>
+<td class="left">Z80A</td>
+</tr>
+
+<tr>
+<td class="left">U15</td>
+<td class="right">14</td>
+<td class="left">'04</td>
+</tr>
+
+<tr>
+<td class="left">U16</td>
+<td class="right">14?</td>
+<td class="left">DELAY LINE</td>
+</tr>
+
+<tr>
+<td class="left">U17-18</td>
+<td class="right">14</td>
+<td class="left">'74</td>
+</tr>
+
+<tr>
+<td class="left">U19-20</td>
+<td class="right">14</td>
+<td class="left">'00</td>
+</tr>
+
+<tr>
+<td class="left">U21</td>
+<td class="right">16</td>
+<td class="left">'138</td>
+</tr>
+
+<tr>
+<td class="left">U22</td>
+<td class="right">16</td>
+<td class="left">'194</td>
+</tr>
+
+<tr>
+<td class="left">U23</td>
+<td class="right">16</td>
+<td class="left">'298</td>
+</tr>
+
+<tr>
+<td class="left">U24</td>
+<td class="right">16</td>
+<td class="left">'194</td>
+</tr>
+
+<tr>
+<td class="left">U25-26</td>
+<td class="right">?</td>
+<td class="left">Driv 488</td>
+</tr>
+
+<tr>
+<td class="left">U27</td>
+<td class="right">14</td>
+<td class="left">'04</td>
+</tr>
+
+<tr>
+<td class="left">U28</td>
+<td class="right">14</td>
+<td class="left">'177 '197?</td>
+</tr>
+
+<tr>
+<td class="left">U29</td>
+<td class="right">14</td>
+<td class="left">'04</td>
+</tr>
+
+<tr>
+<td class="left">U30-31</td>
+<td class="right">16</td>
+<td class="left">'174</td>
+</tr>
+
+<tr>
+<td class="left">U32-33</td>
+<td class="right">16</td>
+<td class="left">'153</td>
+</tr>
+
+<tr>
+<td class="left">U34</td>
+<td class="right">48</td>
+<td class="left">PHI</td>
+</tr>
+
+<tr>
+<td class="left">U35-36</td>
+<td class="right">18?</td>
+<td class="left">RAM 1kx4</td>
+</tr>
+
+<tr>
+<td class="left">U37</td>
+<td class="right">20</td>
+<td class="left">'245</td>
+</tr>
+
+<tr>
+<td class="left">U38-U39</td>
+<td class="right">20</td>
+<td class="left">'241</td>
+</tr>
+
+<tr>
+<td class="left">U40</td>
+<td class="right">14</td>
+<td class="left">'30</td>
+</tr>
+
+<tr>
+<td class="left">U41</td>
+<td class="right">14</td>
+<td class="left">'164</td>
+</tr>
+
+<tr>
+<td class="left">U42</td>
+<td class="right">16</td>
+<td class="left">'279</td>
+</tr>
+
+<tr>
+<td class="left">U43</td>
+<td class="right">14</td>
+<td class="left">AND-NOR '51?</td>
+</tr>
+
+<tr>
+<td class="left">U44</td>
+<td class="right">14</td>
+<td class="left">'10</td>
+</tr>
+
+<tr>
+<td class="left">U45</td>
+<td class="right">14</td>
+<td class="left">'260</td>
+</tr>
+
+<tr>
+<td class="left">U46</td>
+<td class="right">14</td>
+<td class="left">'14 or '04</td>
+</tr>
+
+<tr>
+<td class="left">U47-48</td>
+<td class="right">16</td>
+<td class="left">'153</td>
+</tr>
+
+<tr>
+<td class="left">U49</td>
+<td class="right">14</td>
+<td class="left">'20?</td>
+</tr>
+
+<tr>
+<td class="left">U50</td>
+<td class="right">14</td>
+<td class="left">'05</td>
+</tr>
+
+<tr>
+<td class="left">U51</td>
+<td class="right">14</td>
+<td class="left">'02</td>
+</tr>
+
+<tr>
+<td class="left">U52</td>
+<td class="right">14</td>
+<td class="left">'00</td>
+</tr>
+
+<tr>
+<td class="left">U53</td>
+<td class="right">14</td>
+<td class="left">'08</td>
+</tr>
+
+<tr>
+<td class="left">U54</td>
+<td class="right">14</td>
+<td class="left">'10</td>
+</tr>
+
+<tr>
+<td class="left">U55</td>
+<td class="right">&#xa0;</td>
+<td class="left">'109?</td>
+</tr>
+
+<tr>
+<td class="left">U56</td>
+<td class="right">14</td>
+<td class="left">'05</td>
+</tr>
+
+<tr>
+<td class="left">U57</td>
+<td class="right">?</td>
+<td class="left">OPAMP</td>
+</tr>
+
+<tr>
+<td class="left">U58-59</td>
+<td class="right">?</td>
+<td class="left">TRANSISTORS</td>
+</tr>
+
+<tr>
+<td class="left">U60</td>
+<td class="right">16</td>
+<td class="left">'175</td>
+</tr>
+
+<tr>
+<td class="left">U61</td>
+<td class="right">16</td>
+<td class="left">'151 or '251</td>
+</tr>
+
+<tr>
+<td class="left">U62</td>
+<td class="right">14</td>
+<td class="left">'393</td>
+</tr>
+
+<tr>
+<td class="left">U63</td>
+<td class="right">16</td>
+<td class="left">'85</td>
+</tr>
+
+<tr>
+<td class="left">U64</td>
+<td class="right">14</td>
+<td class="left">'00</td>
+</tr>
+
+<tr>
+<td class="left">U65</td>
+<td class="right">14</td>
+<td class="left">'04</td>
+</tr>
+
+<tr>
+<td class="left">U66</td>
+<td class="right">16</td>
+<td class="left">'175</td>
+</tr>
+
+<tr>
+<td class="left">U67</td>
+<td class="right">14</td>
+<td class="left">'04</td>
+</tr>
+
+<tr>
+<td class="left">U68</td>
+<td class="right">&#xa0;</td>
+<td class="left">ONESHOT '123?</td>
+</tr>
+
+<tr>
+<td class="left">U69</td>
+<td class="right">14</td>
+<td class="left">'04</td>
+</tr>
+
+<tr>
+<td class="left">U70</td>
+<td class="right">14</td>
+<td class="left">'08</td>
+</tr>
+
+<tr>
+<td class="left">U71</td>
+<td class="right">16</td>
+<td class="left">ROM 512x4</td>
+</tr>
+
+<tr>
+<td class="left">U72</td>
+<td class="right">16</td>
+<td class="left">'174</td>
+</tr>
+
+<tr>
+<td class="left">U73</td>
+<td class="right">14</td>
+<td class="left">'393</td>
+</tr>
+
+<tr>
+<td class="left">U74</td>
+<td class="right">14</td>
+<td class="left">'10</td>
+</tr>
+
+<tr>
+<td class="left">U75-76</td>
+<td class="right">14</td>
+<td class="left">'74</td>
+</tr>
+
+<tr>
+<td class="left">U77</td>
+<td class="right">14</td>
+<td class="left">CRC CHIP 9401</td>
+</tr>
+
+<tr>
+<td class="left">U78</td>
+<td class="right">14</td>
+<td class="left">AND-NOR '51?</td>
+</tr>
+
+<tr>
+<td class="left">U79</td>
+<td class="right">16</td>
+<td class="left">'157</td>
+</tr>
+
+<tr>
+<td class="left">U80</td>
+<td class="right">16</td>
+<td class="left">'112</td>
+</tr>
+
+<tr>
+<td class="left">U81</td>
+<td class="right">14</td>
+<td class="left">'04</td>
+</tr>
+
+<tr>
+<td class="left">U82</td>
+<td class="right">16</td>
+<td class="left">? Osc 8MHz</td>
+</tr>
+
+<tr>
+<td class="left">U83</td>
+<td class="right">?</td>
+<td class="left">N/U?</td>
+</tr>
+
+<tr>
+<td class="left">U84</td>
+<td class="right">14</td>
+<td class="left">'14 or '04</td>
+</tr>
+
+<tr>
+<td class="left">U85</td>
+<td class="right">14</td>
+<td class="left">'27</td>
+</tr>
+
+<tr>
+<td class="left">U86-87</td>
+<td class="right">16</td>
+<td class="left">'174</td>
+</tr>
+
+<tr>
+<td class="left">U88-89</td>
+<td class="right">14</td>
+<td class="left">'05</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+U79 is a 4x 2-to-1 mux: it selects inputs "A" when in IBM mode, "B" inputs in HP mode.
+</p>
+
+<p>
+"8-or-4" is 8 Mhz for HP (HIDEN=1), 4 MHz for IBM mode (HIDEN=0). <b>Schematic bug</b>: U79, pins 5 &amp; 6 are swapped.
+</p>
+
+<p>
+U22 &amp; U4 is clock shift register. It shifts at BITCLK, it shifts right in HP mode, left in IBM mode.
+Bit 7 is U22/A, Bit 0 is U4/D.
+When reading, clock bits from disk comes from SCLKIN. When writing, clock bits goes out either to HPCLK or IBMCLK.
+When CPU reads from RDDATA, clock byte is loaded at the same time (by LOADCLK) into U23/U5.
+When CPU writes to WRDATA, clock byte is loaded into U22/U4 from U23/U5 at the same time that data byte is loaded into U24/U6.
+</p>
+
+<p>
+U43 selects BITCLK from either PLLCLK (when reading) or WRITCLK (when writing). 
+WRITCLK is produced by U41/U40/U80. U41 produces a circulating pattern of 00111111 at 8-or-4 speed.
+This pattern repeats every µs in HP mode and every 2 µs in IBM mode.
+U80 divides the pattern frequency by 2 and produces bit clock for writing (500 kHz for HP, 250 kHz for IBM).
+</p>
+
+<p>
+U72/U71/U60 block encodes bits when writing. Bits are produced at U78 pin 8 and come from either U24/U6 shift register or CRC chip (U77)
+according to value of CRCOUT. U79C selects whether bits are taken LSB first (HIDEN=1) or MSB first (HIDEN=0).
+Encoding of pre-compensated MMFM is done by U71 PROM.
+In MMFM mode, pulse position is selected by U61 mux from the repeating pattern of U41.
+U78A does the FM encoding: it selects either a data bit or IBMCLK according to value of WRITCLK. In FM mode U61 always selects input D0 because
+U60 is kept reset by HIDEN being 0. <b>Schematic bug</b>: U79, pins 2 &amp; 3 are swapped.
+</p>
+
+<p>
+U62/U63/U43 block sets U43 pin 8=0 each time the distance between successive RDDATA pulses is greater than 
+2 µs for HP mode and is less than 3 µs for IBM mode.
+In other words U43 pin 8=1 when there is a sequence of 1s in HP mode and of 0s in IBM mode (i.e. when sync bytes are being
+read from disk).
+U73/U28 form a 6-bit counter that is preset to 3 each time U43 pin 8 is 0. When instead this pin is 1,
+the counter counts RDDATA pulses until it reaches 32 (i.e. until 29 consecutive 1s/0s are read).
+When counter is 32 LCKUP goes low to signal that synchronization has been achieved.
+LCKUP is preset to 1 when READON=0 (through reset of U75B).
+As long as WRITON=0 &amp; LCKUP=1, counter U73A is reset. This counter counts bits inside the current byte and
+it's released to count when synchronization with byte boundary is reached. This happens when LSB of current 
+byte is 0 in HP mode or MSB is 1 in IBM mode (U79B &amp; U42D). <b>Schematic bug</b>: U79, pins 10 &amp; 11 are swapped.
+CPU is informed of byte synchronization by setting AMDT=1.
+</p>
+</div>
+
+<div id="outline-container-sec-1-2-1" class="outline-4">
+<h4 id="sec-1-2-1"><span class="section-number-4">1.2.1</span> U16 delay line</h4>
+<div class="outline-text-4" id="text-1-2-1">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="left" />
+
+<col  class="left" />
+
+<col  class="left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left"><b>Signal</b></th>
+<th scope="col" class="left"><b>Eq</b></th>
+<th scope="col" class="left"><b>Time sequence</b></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">RDDATA: U16/1</td>
+<td class="left">&#xa0;</td>
+<td class="left"><code>100000000001111111</code></td>
+</tr>
+
+<tr>
+<td class="left">U16/13</td>
+<td class="left">&#xa0;</td>
+<td class="left"><code>110000000000111111</code></td>
+</tr>
+
+<tr>
+<td class="left">U16/3</td>
+<td class="left">&#xa0;</td>
+<td class="left"><code>111000000000011111</code></td>
+</tr>
+
+<tr>
+<td class="left">U16/11</td>
+<td class="left">&#xa0;</td>
+<td class="left"><code>111100000000001111</code></td>
+</tr>
+
+<tr>
+<td class="left">U16/5</td>
+<td class="left">&#xa0;</td>
+<td class="left"><code>111110000000000111</code></td>
+</tr>
+
+<tr>
+<td class="left">U16/6</td>
+<td class="left">&#xa0;</td>
+<td class="left"><code>111111000000000011</code></td>
+</tr>
+
+<tr>
+<td class="left">U2/3</td>
+<td class="left">!U16/5</td>
+<td class="left"><code>000001111111111000</code></td>
+</tr>
+
+<tr>
+<td class="left">U2/6</td>
+<td class="left">!U16/6</td>
+<td class="left"><code>000000111111111100</code></td>
+</tr>
+
+<tr>
+<td class="left">U1/6</td>
+<td class="left">!(U16/3 &amp; U2/3)</td>
+<td class="left"><code>111111111111100111</code></td>
+</tr>
+
+<tr>
+<td class="left">U27/12</td>
+<td class="left">U2/6 &amp; U16/3</td>
+<td class="left"><code>000000000000011100</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-1-3" class="outline-3">
+<h3 id="sec-1-3"><span class="section-number-3">1.3</span> Memory map</h3>
+<div class="outline-text-3" id="text-1-3">
+<p>
+ROM @ xx0a-aaaa-aaaa-aaaa (0x0000 -&gt; 0x1fff)
+</p>
+
+<p>
+RAM @ x11x-xxaa-aaaa-aaaa (0x6000 -&gt; 0x63ff)
+</p>
+</div>
+</div>
+
+<div id="outline-container-sec-1-4" class="outline-3">
+<h3 id="sec-1-4"><span class="section-number-3">1.4</span> I/O map</h3>
+<div class="outline-text-3" id="text-1-4">
+<p>
+PHI @ xxx1-xxxx (0x10 -&gt; 0x1f) A15-A13 of PHI, connected to A2-A0
+</p>
+
+<p>
+ACCDATA=1 @ xxx0-x000 (both when reading and writing)
+</p>
+
+<p>
+READENA=1 @ xxx0-xxxx (IOR only)
+</p>
+</div>
+
+<div id="outline-container-sec-1-4-1" class="outline-4">
+<h4 id="sec-1-4-1"><span class="section-number-4">1.4.1</span> I/O write</h4>
+<div class="outline-text-4" id="text-1-4-1">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="left" />
+
+<col  class="right" />
+
+<col  class="left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left"><b>Mask</b></th>
+<th scope="col" class="right"><b>Hex</b></th>
+<th scope="col" class="left"><b>Reg</b></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">xx1x-x000</td>
+<td class="right">0x60</td>
+<td class="left">WRDATA</td>
+</tr>
+
+<tr>
+<td class="left">xx1x-x001</td>
+<td class="right">0x61</td>
+<td class="left">WRCLOCK</td>
+</tr>
+
+<tr>
+<td class="left">xx1x-x010</td>
+<td class="right">0x62</td>
+<td class="left">WRRESET</td>
+</tr>
+
+<tr>
+<td class="left">xx1x-x011</td>
+<td class="right">0x63</td>
+<td class="left">WRLEDS (U30)</td>
+</tr>
+
+<tr>
+<td class="left">xx1x-x100</td>
+<td class="right">0x64</td>
+<td class="left">WRCNTL (U31)</td>
+</tr>
+
+<tr>
+<td class="left">xx1x-x101</td>
+<td class="right">0x65</td>
+<td class="left">WRDRV (U87)</td>
+</tr>
+
+<tr>
+<td class="left">xx1x-x110</td>
+<td class="right">0x66</td>
+<td class="left">WRXV</td>
+</tr>
+
+<tr>
+<td class="left">xx1x-x111</td>
+<td class="right">0x67</td>
+<td class="left">-</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<ol class="org-ol"><li><a id="sec-1-4-1-1" name="sec-1-4-1-1"></a>WRDATA<br  /><div class="outline-text-5" id="text-1-4-1-1">
+<p>
+Writes into U24/U6 when current byte has finished going to disk.
+</p>
+</div>
+</li>
+
+<li><a id="sec-1-4-1-2" name="sec-1-4-1-2"></a>WRCLOCK<br  /><div class="outline-text-5" id="text-1-4-1-2">
+<p>
+Writes asynchronously into U23/U5. D7 goes to U23/A1, D0 goes to U5/D1.
+</p>
+</div>
+</li>
+
+<li><a id="sec-1-4-1-3" name="sec-1-4-1-3"></a>WRRESET<br  /><div class="outline-text-5" id="text-1-4-1-3">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="right" />
+
+<col  class="left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="right"><b>Bit</b></th>
+<th scope="col" class="left"><b>What</b></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="right">0</td>
+<td class="left">Start TIMEOUT oneshot(1)</td>
+</tr>
+
+<tr>
+<td class="right">1</td>
+<td class="left">Clear OVERUN (1)</td>
+</tr>
+
+<tr>
+<td class="right">3</td>
+<td class="left">Generate PROGRES (1)</td>
+</tr>
+</tbody>
+</table>
+</div>
+</li>
+
+<li><a id="sec-1-4-1-4" name="sec-1-4-1-4"></a>WRLEDS<br  /><div class="outline-text-5" id="text-1-4-1-4">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="left" />
+
+<col  class="left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left"><b>Bit</b></th>
+<th scope="col" class="left"><b>What</b></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">0?</td>
+<td class="left">LED0 (RHS) (0)</td>
+</tr>
+
+<tr>
+<td class="left">1?</td>
+<td class="left">LED1 (0)</td>
+</tr>
+
+<tr>
+<td class="left">2?</td>
+<td class="left">LED2 (0)</td>
+</tr>
+
+<tr>
+<td class="left">3?</td>
+<td class="left">LED3 (0)</td>
+</tr>
+
+<tr>
+<td class="left">4?</td>
+<td class="left">LED4 (LHS) (0)</td>
+</tr>
+</tbody>
+</table>
+</div>
+</li>
+
+<li><a id="sec-1-4-1-5" name="sec-1-4-1-5"></a>WRCNTL<br  /><div class="outline-text-5" id="text-1-4-1-5">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="left" />
+
+<col  class="left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left"><b>Bit</b></th>
+<th scope="col" class="left"><b>What</b></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">0?</td>
+<td class="left">CRCON</td>
+</tr>
+
+<tr>
+<td class="left">1?</td>
+<td class="left">WRITON</td>
+</tr>
+
+<tr>
+<td class="left">2?</td>
+<td class="left">WRITDRV (1)</td>
+</tr>
+
+<tr>
+<td class="left">3?</td>
+<td class="left">CRCOUT</td>
+</tr>
+
+<tr>
+<td class="left">4?</td>
+<td class="left">READON</td>
+</tr>
+</tbody>
+</table>
+</div>
+</li>
+
+<li><a id="sec-1-4-1-6" name="sec-1-4-1-6"></a>WRDRV<br  /><div class="outline-text-5" id="text-1-4-1-6">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="left" />
+
+<col  class="left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left"><b>Bit</b></th>
+<th scope="col" class="left"><b>What</b></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">0?</td>
+<td class="left">STEP</td>
+</tr>
+
+<tr>
+<td class="left">1?</td>
+<td class="left">MOVEIN</td>
+</tr>
+
+<tr>
+<td class="left">2?</td>
+<td class="left">MGNENA</td>
+</tr>
+
+<tr>
+<td class="left">3?</td>
+<td class="left">HEADLOAD</td>
+</tr>
+
+<tr>
+<td class="left">4?</td>
+<td class="left">LOWCURR</td>
+</tr>
+
+<tr>
+<td class="left">5?</td>
+<td class="left">HEADSEL</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+MGNENA enables the checking of some code violation in low-level bits (see U3,U2D &amp; U18B).
+If a violation is detected XMGN=0. If MGNENA=1 &amp; XMGN=0, CRCERR=1 (U64C &amp; U44C).
+</p>
+
+<p>
+Fw confirms bits 0 &amp; 1 (x06a8 steps the heads by 1 track).
+</p>
+</div>
+</li>
+
+<li><a id="sec-1-4-1-7" name="sec-1-4-1-7"></a>WRXV<br  /><div class="outline-text-5" id="text-1-4-1-7">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="left" />
+
+<col  class="left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left"><b>Bit</b></th>
+<th scope="col" class="left"><b>What</b></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">0?</td>
+<td class="left">DRV3</td>
+</tr>
+
+<tr>
+<td class="left">1?</td>
+<td class="left">DRV2</td>
+</tr>
+
+<tr>
+<td class="left">2?</td>
+<td class="left">DRV1</td>
+</tr>
+
+<tr>
+<td class="left">3?</td>
+<td class="left">DRV0</td>
+</tr>
+
+<tr>
+<td class="left">4?</td>
+<td class="left">HIDEN (1 = HP mode, 0 = IBM mode)</td>
+</tr>
+
+<tr>
+<td class="left">5?</td>
+<td class="left">PRECMP</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+Fw seems to confirm the position of all bits (x00c9 computes the mask of current drive, for ex.).
+</p>
+</div>
+</li></ol>
+</div>
+
+<div id="outline-container-sec-1-4-2" class="outline-4">
+<h4 id="sec-1-4-2"><span class="section-number-4">1.4.2</span> I/O read</h4>
+<div class="outline-text-4" id="text-1-4-2">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="left" />
+
+<col  class="right" />
+
+<col  class="left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left"><b>Mask</b></th>
+<th scope="col" class="right"><b>Hex</b></th>
+<th scope="col" class="left"><b>Reg</b></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">xxx0-xx00</td>
+<td class="right">0x60</td>
+<td class="left">RDDATA</td>
+</tr>
+
+<tr>
+<td class="left">xxx0-xx01</td>
+<td class="right">0x61</td>
+<td class="left">RDCLOCK</td>
+</tr>
+
+<tr>
+<td class="left">xxx0-xx10</td>
+<td class="right">0x62</td>
+<td class="left">RDDRIVSTAT</td>
+</tr>
+
+<tr>
+<td class="left">xxx0-xx11</td>
+<td class="right">0x63</td>
+<td class="left">RDSWITCHES</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+U33 YB = D0
+</p>
+
+<p>
+U33 YA = D1
+</p>
+
+<p>
+U48 YB = D2
+</p>
+
+<p>
+U48 YA = D3
+</p>
+
+<p>
+U32 YB = D4
+</p>
+
+<p>
+U32 YA = D5
+</p>
+
+<p>
+U47 YB = D6
+</p>
+
+<p>
+U47 YA = D7
+</p>
+</div>
+
+<ol class="org-ol"><li><a id="sec-1-4-2-1" name="sec-1-4-2-1"></a>RDDATA<br  /><div class="outline-text-5" id="text-1-4-2-1">
+<p>
+Reads from U24/U6 when current byte is fully shifted in from disk. U73A &amp; U74C count bits in the current byte. When byte is fully formed in shift register, SDOK=1.
+</p>
+</div>
+</li>
+
+<li><a id="sec-1-4-2-2" name="sec-1-4-2-2"></a>RDDRIVSTAT<br  /><div class="outline-text-5" id="text-1-4-2-2">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="left" />
+
+<col  class="left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left"><b>Bit</b></th>
+<th scope="col" class="left"><b>What</b></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">0</td>
+<td class="left">INDEX (1)</td>
+</tr>
+
+<tr>
+<td class="left">1</td>
+<td class="left">DIS CHNG (1)</td>
+</tr>
+
+<tr>
+<td class="left">2</td>
+<td class="left">TRACK0 (1)</td>
+</tr>
+
+<tr>
+<td class="left">3?</td>
+<td class="left">WRPROT (1)</td>
+</tr>
+
+<tr>
+<td class="left">4?</td>
+<td class="left">READY (1)</td>
+</tr>
+
+<tr>
+<td class="left">5?</td>
+<td class="left">CRCERR</td>
+</tr>
+
+<tr>
+<td class="left">6</td>
+<td class="left">OVERUN (1)</td>
+</tr>
+
+<tr>
+<td class="left">7?</td>
+<td class="left">TWOSIDE (1)</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+FW: rst 08 seeks to track 0 (it steps heads outward until bit 2 of RDDRIVSTAT is set).
+</p>
+</div>
+</li>
+
+<li><a id="sec-1-4-2-3" name="sec-1-4-2-3"></a>RDSWITCHES<br  /><div class="outline-text-5" id="text-1-4-2-3">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="left" />
+
+<col  class="left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left"><b>Bit</b></th>
+<th scope="col" class="left"><b>What</b></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">0</td>
+<td class="left">HPIB Addr 0</td>
+</tr>
+
+<tr>
+<td class="left">1</td>
+<td class="left">HPIB Addr 1</td>
+</tr>
+
+<tr>
+<td class="left">2</td>
+<td class="left">HPIB Addr 2</td>
+</tr>
+
+<tr>
+<td class="left">3?</td>
+<td class="left">"W" TEST (1)</td>
+</tr>
+
+<tr>
+<td class="left">4?</td>
+<td class="left">"S" TEST (1)</td>
+</tr>
+
+<tr>
+<td class="left">5?</td>
+<td class="left">LOOP (1)</td>
+</tr>
+
+<tr>
+<td class="left">6</td>
+<td class="left">TIMEOUT (0 = active oneshot?)</td>
+</tr>
+
+<tr>
+<td class="left">7?</td>
+<td class="left">AMDT (Addr Mark detect)</td>
+</tr>
+</tbody>
+</table>
+</div>
+</li></ol>
+</div>
+</div>
+
+<div id="outline-container-sec-1-5" class="outline-3">
+<h3 id="sec-1-5"><span class="section-number-3">1.5</span> PHI</h3>
+<div class="outline-text-3" id="text-1-5">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="right" />
+
+<col  class="left" />
+
+<col  class="left" />
+
+<col  class="left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="right"><b>Pin</b></th>
+<th scope="col" class="left"><b>Name</b></th>
+<th scope="col" class="left"><b>I/O</b></th>
+<th scope="col" class="left"><b>Where</b></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="right">20-22</td>
+<td class="left">A15-A13</td>
+<td class="left">I</td>
+<td class="left">A2-A0 CPU</td>
+</tr>
+
+<tr>
+<td class="right">27-34</td>
+<td class="left">D15-D8</td>
+<td class="left">I/O</td>
+<td class="left">D7-D0 CPU</td>
+</tr>
+
+<tr>
+<td class="right">26</td>
+<td class="left">D1</td>
+<td class="left">O</td>
+<td class="left">U54</td>
+</tr>
+
+<tr>
+<td class="right">19</td>
+<td class="left">IOGO/</td>
+<td class="left">I</td>
+<td class="left">IORQ/ CPU</td>
+</tr>
+
+<tr>
+<td class="right">16</td>
+<td class="left">WRITE</td>
+<td class="left">I</td>
+<td class="left">RD/ CPU</td>
+</tr>
+
+<tr>
+<td class="right">23</td>
+<td class="left">CS/</td>
+<td class="left">I</td>
+<td class="left">!(A4 &amp; M1/)</td>
+</tr>
+
+<tr>
+<td class="right">17</td>
+<td class="left">INT</td>
+<td class="left">O</td>
+<td class="left">NMI/</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+<b>U55</b>
+</p>
+
+<p>
+J(14) = 0
+</p>
+
+<p>
+K/(13) = !(D1 &amp; !(WRITE | CS/))
+</p>
+
+<p>
+CK(12) = IOGO/
+</p>
+
+<p>
+CLR/ i.e. PR/(11) = PON &amp; M1/
+</p>
+
+<p>
+Q(10) = INT/
+</p>
+
+<p>
+That is: when reading from PHI and D1=1, a neg. pulse is sent to INT/ which is removed at next M1/.
+</p>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: F.Ulivi</p>
+<p class="date">Created: 2016-11-07 Mon 17:22</p>
+<p class="creator"><a href="http://www.gnu.org/software/emacs/">Emacs</a> 24.4.1 (<a href="http://orgmode.org">Org</a> mode 8.2.10)</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>
